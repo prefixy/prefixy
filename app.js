@@ -24,9 +24,9 @@ const extractPrefixes = completion => {
 };
 
 const index = (prefixes, completion) => {
-  prefixes.forEach(prefix => (
+  prefixes.forEach(prefix =>
     client.zadd(prefix, 0, completion)
-  ));
+  );
 };
 
 
@@ -38,9 +38,9 @@ const index = (prefixes, completion) => {
 // output: array of suggestions
 
 const search = prefixQuery => {
-  client.zrange(prefixQuery, 0, -1, (err, reply) => (
+  client.zrange(prefixQuery, 0, -1, (err, reply) =>
     console.log(reply)
-  ));
+  );
 };
 
 // search("h");
@@ -49,14 +49,28 @@ const search = prefixQuery => {
 // by frequency plus ascending lexographical order in Redis
 const bumpScore = completion => {
   const prefixes = extractPrefixes(completion);
-  prefixes.forEach(prefix => (
+  prefixes.forEach(prefix =>
     client.zincrby(prefix, -1, completion)
-  ));
+  );
   return;
 };
 
-bumpScore("walid");
-bumpScore("waldo");
-bumpScore("waldo");
+// bumpScore("walid");
+// bumpScore("waldo");
+// bumpScore("waldo");
+
+// input: completion, score
+// output: none
+// side effect: set the score for the completion
+// in every bucket its in
+
+const setScore = (completion, score) => {
+  const prefixes = extractPrefixes(completion);
+  prefixes.forEach(prefix =>
+    client.zadd(prefix, score, completion)
+  );
+};
+
+setScore("walter", -500);
 
 client.quit();
