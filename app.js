@@ -4,15 +4,33 @@ const redis = require("redis");
 const client = redis.createClient();
 
 // later: configuration option - include full string
-// also clean up completions before importing
+// also clean up completions before insertCompletionsing
 // E.g. normalize case and whitespaces
 
-const batchImport = completions => {
+const insertCompletions = completions => {
   completions.forEach(completion => {
     const prefixes = extractPrefixes(completion);
     index(prefixes, completion);
   });
   return completions.length;
+};
+
+const insertCompletion = completion => {
+  insertCompletions([completion]);
+  return 1;
+};
+
+const deleteCompletions = completions => {
+  completions.forEach(completion => {
+    const prefixes = extractPrefixes(completion);
+    remove(prefixes, completion);
+  });
+  return completions.length;
+};
+
+const deleteCompletion = completion => {
+  deleteCompletions([completion]);
+  return 1;
 };
 
 const extractPrefixes = completion => {
@@ -29,13 +47,11 @@ const index = (prefixes, completion) => {
   );
 };
 
-
-// const funNames = ['jay', 'tiffany', 'walid', 'kevin', 'waldo', 'wally', 'walden', 'jays', 'jacqueline', 'jay', 'jones', 'jay jay', 'homer jay simpson', 'tin', 'tim', 'timbuktu', 'till', 'true'];
-
-// batchImport(funNames);
-
-// input: string (the prefix we are querying)
-// output: array of suggestions
+const remove = (prefixes, completion) => {
+  prefixes.forEach(prefix =>
+    client.zrem(prefix, completion)
+  );
+};
 
 const search = prefixQuery => {
   client.zrange(prefixQuery, 0, -1, (err, reply) =>
@@ -43,7 +59,16 @@ const search = prefixQuery => {
   );
 };
 
-// search("h");
+const returnTopXSuggestions = suggestionCount => {
+  return prefixQuery => {
+    client.zrange(prefixQuery, 0, suggestionCount - 1, (err, reply) =>
+      console.log(reply)
+    );
+  }
+};
+
+const returnTop5Suggestions = returnTopXSuggestions(5);
+const returnTop3Suggestions = returnTopXSuggestions(3);
 
 // we increment by -1, bc this enables us to sort
 // by frequency plus ascending lexographical order in Redis
@@ -55,15 +80,6 @@ const bumpScore = completion => {
   return;
 };
 
-// bumpScore("walid");
-// bumpScore("waldo");
-// bumpScore("waldo");
-
-// input: completion, score
-// output: none
-// side effect: set the score for the completion
-// in every bucket its in
-
 const setScore = (completion, score) => {
   const prefixes = extractPrefixes(completion);
   prefixes.forEach(prefix =>
@@ -71,6 +87,14 @@ const setScore = (completion, score) => {
   );
 };
 
-setScore("walter", -500);
-
-client.quit();
+module.exports = {
+  client,
+  insertCompletions,
+  extractPrefixes,
+  index,
+  search,
+  bumpScore,
+  setScore,
+  returnTopXSuggestions,
+  returnTop5Suggestions
+};

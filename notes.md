@@ -1,3 +1,7 @@
+Possible Additions:
+- allow batch updating of scores
+- allow specifying scores in import
+
 no broken windows
 test early
  test often
