@@ -2,7 +2,7 @@ Future Development Notes:
 - only support single additions of completions in CLI
   - later we will support multiple additions from file
 - only support single deletion of completions in CLI
-
+- explore process.cwd() for command line import
 
 Possible Additions:
 - allow batch updating of scores
