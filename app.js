@@ -140,7 +140,26 @@ module.exports = {
   returnTopXSuggestions,
   top5Suggestions,
   top5SuggestionsWithScores,
-  deleteCompletion
+  deleteCompletion,
 };
 
-
+// module.exports = {
+//   importFile: function(path) {
+//     let data;
+//     try {
+//       data = fs.readFileSync(path, "utf-8");
+//     } catch (e) {
+//       console.log(`ERROR: ${e.path} is not a valid file path`);
+//       return;
+//     }
+//     const dataJson = JSON.parse(data);
+//     this.foobar(dataJson);
+//   },
+//   foobar: completions => {
+//     // completions.forEach(completion => {
+//     //   const prefixes = this.extractPrefixes(completion);
+//     //   index(prefixes, completion);
+//     // });
+//     return completions.length;
+//   }
+// };

@@ -2,7 +2,7 @@ const App = require("../../app");
 
 describe("App", () => {
   describe("extractPrefixes", () => {
-    it("returns an array of prefixes for a completion", () => {
+    xit("returns an array of prefixes for a completion", () => {
       expect(
         App.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
@@ -10,10 +10,12 @@ describe("App", () => {
   });
 
   describe("importFile", () => {
-    spyOn(App, 'insertCompletions');
-
     it("calls insertCompletions with parsed json data", () => {
-
+      spyOn(App, "insertCompletions");
+      App.importFile("spec/test-data.json");
+      expect(
+        App.insertCompletions
+      ).toHaveBeenCalled();
     });
   });
 });
