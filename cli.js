@@ -13,10 +13,29 @@ program
   .action(() => console.log('PONG'));
 
 program
+  .command('insert <completion>')
+  .option('-s, --with-score <score>')
+  .action((completion, command) =>
+    App.setScore(completion, -command.withScore)
+  );
+
+program
+  .command('setscore <completion> <score>')
+  .action((completion, score) =>
+    App.setScore(completion, -score)
+  );
+
+program
   .command('search <prefixQuery>')
-  .action((prefixQuery) => (
+  .action(prefixQuery =>
     App.search(prefixQuery)
-  ));
+  );
+
+program
+  .command('delete <completion>')
+  .action(completion =>
+    App.deleteCompletion(completion)
+  );
 
 program.parse(process.argv);
 

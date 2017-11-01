@@ -15,7 +15,7 @@ const insertCompletions = completions => {
   return completions.length;
 };
 
-// takes an array of completions with scores 
+// takes an array of completions with scores
 // e.g. [{ completion: "string", score: -13 }]
 const insertCompletionsWithScores = completionsWithScores => {
   completionsWithScores.forEach(item => {
@@ -106,5 +106,6 @@ module.exports = {
   bumpScore,
   setScore,
   returnTopXSuggestions,
-  returnTop5Suggestions
+  returnTop5Suggestions,
+  deleteCompletion
 };

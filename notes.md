@@ -1,3 +1,9 @@
+Future Development Notes:
+- only support single additions of completions in CLI
+  - later we will support multiple additions from file
+- only support single deletion of completions in CLI
+
+
 Possible Additions:
 - allow batch updating of scores
 - allow specifying scores in import
