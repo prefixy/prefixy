@@ -7,6 +7,7 @@ Future Development Notes:
 Possible Additions:
 - allow batch updating of scores
 - allow specifying scores in import
+- is "search" a good name for our command line instruction?
 
 no broken windows
 test early

@@ -27,14 +27,42 @@ program
 
 program
   .command('search <prefixQuery>')
-  .action(prefixQuery =>
-    App.search(prefixQuery)
-  );
+  .option('-s, --with-scores')
+  .action((prefixQuery, command) => {
+    if (command.withScores) {
+      App.searchWithScores(prefixQuery);
+    } else {
+      App.search(prefixQuery);
+    }
+  });
+
+program
+  .command('suggestions <prefixQuery>')
+  .option('-s, --with-scores')
+  .action((prefixQuery, command) => {
+    if (command.withScores) {
+      App.top5SuggestionsWithScores(prefixQuery);
+    } else {
+      App.top5Suggestions(prefixQuery);
+    }
+  });
 
 program
   .command('delete <completion>')
   .action(completion =>
     App.deleteCompletion(completion)
+  );
+
+program
+  .command('increment <completion>')
+  .action(completion =>
+    App.bumpScore(completion)
+  );
+
+program
+  .command('import <path>')
+  .action(path =>
+    App.importFile(path)
   );
 
 program.parse(process.argv);

@@ -2,10 +2,25 @@ const redis = require("redis");
 // TODO: make createClient its own method, in order
 // to pass in custom config options
 const client = redis.createClient();
-
+const fs = require("fs");
 // later: configuration option - include full string
 // also clean up completions before insertCompletionsing
 // E.g. normalize case and whitespaces
+
+// path represents a relative path from directory of app.js
+// or absolute path
+// currently expects array of completions in a json file
+const importFile = path => {
+  let data;
+  try {
+    data = fs.readFileSync(path, "utf-8");
+  } catch (e) {
+    console.log(`ERROR: ${e.path} is not a valid file path`);
+    return;
+  }
+  const dataJson = JSON.parse(data);
+  insertCompletions(dataJson);
+};
 
 const insertCompletions = completions => {
   completions.forEach(completion => {
@@ -68,6 +83,12 @@ const search = prefixQuery => {
   );
 };
 
+const searchWithScores = prefixQuery => {
+  client.zrange(prefixQuery, 0, -1, 'WITHSCORES', (err, reply) =>
+    console.log(reply)
+  );
+};
+
 const returnTopXSuggestions = suggestionCount => {
   return prefixQuery => {
     client.zrange(prefixQuery, 0, suggestionCount - 1, (err, reply) =>
@@ -76,8 +97,17 @@ const returnTopXSuggestions = suggestionCount => {
   }
 };
 
-const returnTop5Suggestions = returnTopXSuggestions(5);
-const returnTop3Suggestions = returnTopXSuggestions(3);
+const returnTopXSuggestionsWithScores = suggestionCount => {
+  return prefixQuery => {
+    client.zrange(prefixQuery, 0, suggestionCount - 1, 'WITHSCORES', (err, reply) =>
+      console.log(reply)
+    );
+  }
+};
+
+const top5Suggestions = returnTopXSuggestions(5);
+const top3Suggestions = returnTopXSuggestions(3);
+const top5SuggestionsWithScores = returnTopXSuggestionsWithScores(5);
 
 // we increment by -1, bc this enables us to sort
 // by frequency plus ascending lexographical order in Redis
@@ -100,12 +130,17 @@ module.exports = {
   client,
   insertCompletions,
   insertCompletionsWithScores,
+  importFile,
   extractPrefixes,
   index,
   search,
+  searchWithScores,
   bumpScore,
   setScore,
   returnTopXSuggestions,
-  returnTop5Suggestions,
+  top5Suggestions,
+  top5SuggestionsWithScores,
   deleteCompletion
 };
+
+
