@@ -15,6 +15,15 @@ const insertCompletions = completions => {
   return completions.length;
 };
 
+// takes an array of completions with scores 
+// e.g. [{ completion: "string", score: -13 }]
+const insertCompletionsWithScores = completionsWithScores => {
+  completionsWithScores.forEach(item => {
+    const prefixes = extractPrefixes(item.completion);
+    index(prefixes, item.completion, item.score);
+  });
+};
+
 const insertCompletion = completion => {
   insertCompletions([completion]);
   return 1;
@@ -41,9 +50,9 @@ const extractPrefixes = completion => {
   return prefixes;
 };
 
-const index = (prefixes, completion) => {
+const index = (prefixes, completion, score=0) => {
   prefixes.forEach(prefix =>
-    client.zadd(prefix, 0, completion)
+    client.zadd(prefix, score, completion)
   );
 };
 
@@ -90,6 +99,7 @@ const setScore = (completion, score) => {
 module.exports = {
   client,
   insertCompletions,
+  insertCompletionsWithScores,
   extractPrefixes,
   index,
   search,
