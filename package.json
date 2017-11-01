@@ -6,12 +6,17 @@
   "scripts": {
     "start": "node app.js",
     "seed": "node seed.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "cli": "node cli.js"
+  },
+  "bin": {
+    "prefixy": "./cli.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "commander": "^2.11.0",
     "redis": "^2.8.0"
   }
 }
