@@ -61,4 +61,34 @@ describe("App", () => {
       ).not.toHaveBeenCalled();
     });
   });
+
+  describe("search", () => {
+    beforeEach(() => {
+      spyOn(App.client, "zrangeAsync");
+    });
+
+    it("calls zrangeAsync", () => {
+      App.search("wo");
+
+      expect(
+        App.client.zrangeAsync
+      ).toHaveBeenCalled();
+    });
+
+    it("calls zrangeAsync with correct arguments", () => {
+      App.search("wo");
+
+      expect(
+        App.client.zrangeAsync
+      ).toHaveBeenCalledWith("wo", 0, -1);
+    });
+
+    it("calls zrangeAsync with the options provided to search", () => {
+      App.search("wo", { limit: 5, withScores: true });
+
+      expect(
+        App.client.zrangeAsync
+      ).toHaveBeenCalledWith("wo", 0, 4, 'WITHSCORES');
+    });
+  });
 });

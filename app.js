@@ -93,7 +93,7 @@ module.exports = {
     );
   },
 
-  search: function(prefixQuery, opts) {
+  search: function(prefixQuery, opts={}) {
     const defaultOpts = { limit: 0, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
