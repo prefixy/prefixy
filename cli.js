@@ -57,7 +57,7 @@ program
 program
   .command('delete <completion>')
   .action(completion =>
-    App.deleteCompletion(completion)
+    App.deleteCompletions([completion])
   );
 
 program

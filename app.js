@@ -17,6 +17,13 @@ const client = redis.createClient();
 // or absolute path
 // currently expects array of completions in a json file
 
+const validateInputIsArray = (input, funcName) => {
+  if (!Array.isArray(input)) {
+    throw new TypeError(
+      `The argument to ${funcName} must be an array`
+    );
+  }
+};
 
 // exported functions
 module.exports = {
@@ -29,19 +36,14 @@ module.exports = {
       data = fs.readFileSync(path.resolve(process.cwd(), filePath), "utf-8");
       dataJson = JSON.parse(data);
     } catch (e) {
-      console.log(e.message);
-      return;
+      return e.message;
     }
 
     this.insertCompletions(dataJson);
   },
 
   insertCompletions: function(completions) {
-    if (!Array.isArray(completions)) {
-      throw new TypeError(
-        `The argument to insertCompletions must be an array`
-      );
-    }
+    validateInputIsArray(completions, "insertCompletions");
 
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
@@ -53,11 +55,7 @@ module.exports = {
   // takes an array of completions with scores
   // e.g. [{ completion: "string", score: -13 }]
   insertCompletionsWithScores: function(completionsWithScores) {
-    if (!Array.isArray(completions)) {
-      throw new TypeError(
-        `The argument to insertCompletionsWithScores must be an array`
-      );
-    }
+    validateInputIsArray(completionsWithScores, "insertCompletionsWithScores");
 
     completionsWithScores.forEach(item => {
       const prefixes = this.extractPrefixes(item.completion);
@@ -65,22 +63,14 @@ module.exports = {
     });
   },
 
-  insertCompletion: function(completion) {
-    this.insertCompletions([completion]);
-    return 1;
-  },
-
   deleteCompletions: function(completions) {
+    validateInputIsArray(completions, "deleteCompletions");
+
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
       this.remove(prefixes, completion);
     });
     return completions.length;
-  },
-
-  deleteCompletion: function(completion) {
-    this.deleteCompletions([completion]);
-    return 1;
   },
 
   extractPrefixes: function(completion) {

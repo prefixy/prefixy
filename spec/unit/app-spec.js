@@ -12,24 +12,49 @@ describe("App", () => {
   });
 
   describe("importFile", () => {
-    it("calls insertCompletions with parsed json data", () => {
-      const filePath = path.resolve(__dirname, "valid-data.json");
-      fs.writeFileSync(filePath, JSON.stringify(
-        ["tiffany han", "walid wahed", "jay shenk"]
-      ), "utf8");
+    let filePath;
+    let fileCreated = false;
 
+    const saveFile = data => {
+      fs.writeFileSync(filePath, data, "utf8");
+      fileCreated = true;
+    };
+
+    beforeEach(() => {
+      filePath = path.resolve(__dirname, "temp-data.json");
       spyOn(App, "insertCompletions");
+    });
+
+    afterEach(() => {
+      if (fileCreated) {
+        fs.unlinkSync(filePath);
+        fileCreated = false;
+      }
+    });
+
+    it("calls insertCompletions with parsed json data", () => {
+      const data = JSON.stringify(["tiff", "wal", "jay"]);
+      saveFile(data);
+
       App.importFile(filePath);
+
       expect(
         App.insertCompletions
       ).toHaveBeenCalled();
-
-      fs.unlinkSync(filePath);
     });
 
     it("does not call insertCompletions when the path is invalid", () => {
-      spyOn(App, "insertCompletions");
-      App.importFile("spec/testtttttttttt-data.json");
+      App.importFile("testtttttttttt-data.json");
+
+      expect(
+        App.insertCompletions
+      ).not.toHaveBeenCalled();
+    });
+
+    it("does not call insertCompletions when the JSON is invalid", () => {
+      saveFile("['pikachu' 'bulbasaur' 'gengar']");
+
+      App.importFile(filePath);
 
       expect(
         App.insertCompletions
