@@ -31,10 +31,10 @@ program
   .action((prefixQuery, command) => {
     if (command.withScores) {
       App.searchWithScores(prefixQuery)
-      .then(reply => console.log(reply));
+        .then(reply => console.log(reply));
     } else {
       App.search(prefixQuery)
-      .then(reply => console.log(reply));
+        .then(reply => console.log(reply));
     }
   });
 
@@ -44,10 +44,10 @@ program
   .action((prefixQuery, command) => {
     if (command.withScores) {
       App.top5SuggestionsWithScores(prefixQuery)
-      .then(reply => console.log(reply));
+        .then(reply => console.log(reply));
     } else {
       App.top5Suggestions(prefixQuery)
-      .then(reply => console.log(reply));
+        .then(reply => console.log(reply));
     }
   });
 

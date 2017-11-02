@@ -2,7 +2,12 @@ const redis = require("redis");
 // TODO: make createClient its own method, in order
 // to pass in custom config options
 const fs = require("fs");
+
+const bluebird = require("bluebird");
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
 const client = redis.createClient();
+
 // later: configuration option - include full string
 // also clean up completions before insertCompletionsing
 // E.g. normalize case and whitespaces
@@ -15,23 +20,17 @@ const client = redis.createClient();
 // helpers
 
 const returnTopXSuggestions = function(suggestionCount) {
-  return prefixQuery => {
-    return new Promise((resolve, reject) => {
-      client.zrange(prefixQuery, 0, suggestionCount - 1, (err, reply) =>
-        resolve(reply)
-      );
-    });
-  }
+  return prefixQuery => (
+    client.zrangeAsync(prefixQuery, 0, suggestionCount - 1)
+  );
 };
 
 const returnTopXSuggestionsWithScores = function(suggestionCount) {
-  return prefixQuery => {
-    return new Promise((resolve, reject) => {
-      client.zrange(prefixQuery, 0, suggestionCount - 1, 'WITHSCORES', (err, reply) =>
-        resolve(reply)
-      );
-    });
-  }
+  return prefixQuery => (
+    client.zrangeAsync(
+      prefixQuery, 0, suggestionCount - 1, 'WITHSCORES'
+    )
+  );
 };
 
 // exported functions
@@ -107,19 +106,11 @@ module.exports = {
   },
 
   search: function(prefixQuery) {
-    return new Promise((resolve, reject) => {
-      this.client.zrange(prefixQuery, 0, -1, (err, reply) => {
-        resolve(reply);
-      });
-    });
+    return this.client.zrangeAsync(prefixQuery, 0, -1);
   },
 
   searchWithScores: function(prefixQuery) {
-    return new Promise((resolve, reject) => {
-      this.client.zrange(prefixQuery, 0, -1, 'WITHSCORES', (err, reply) => {
-        resolve(reply);
-      });
-    });
+    return this.client.zrangeAsync(prefixQuery, 0, -1, 'WITHSCORES');
   },
 
   top5Suggestions: returnTopXSuggestions(5),
@@ -143,5 +134,3 @@ module.exports = {
     );
   },
 };
-
-
