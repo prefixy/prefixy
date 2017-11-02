@@ -2,6 +2,7 @@ const redis = require("redis");
 // TODO: make createClient its own method, in order
 // to pass in custom config options
 const fs = require("fs");
+const path = require("path");
 
 const bluebird = require("bluebird");
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -20,17 +21,18 @@ const client = redis.createClient();
 // exported functions
 module.exports = {
   client: client,
-  importFile: function(path) {
+  importFile: function(filePath) {
     let data;
+    let dataJson;
+
     try {
-      data = fs.readFileSync(path, "utf-8");
-      // TO MAYBE:
-      // data = fs.readFileSync(process.cwd() + path, "utf-8");
+      data = fs.readFileSync(path.resolve(process.cwd(), filePath), "utf-8");
+      dataJson = JSON.parse(data);
     } catch (e) {
-      throw new TypeError(`${e.path} is not a valid path`);
+      console.log(e.message);
       return;
     }
-    const dataJson = JSON.parse(data);
+
     this.insertCompletions(dataJson);
   },
 
@@ -103,7 +105,7 @@ module.exports = {
 
   search: function(prefixQuery, opts) {
     const defaultOpts = { limit: 0, withScores: false };
-    opts = Object.assign({}, defaultOpts, opts);
+    opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
     let args = [prefixQuery, 0, limit];
