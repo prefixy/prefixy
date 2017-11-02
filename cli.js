@@ -15,9 +15,12 @@ program
 program
   .command('insert <completion>')
   .option('-s, --with-score <score>', 'add a score', '0')
-  .action((completion, command) =>
-    App.setScore(completion, -command.withScore)
-  );
+  .action((completion, command) => {
+    const arg = [
+      { completion: completion, score: -command.withScore }
+    ];
+    App.insertCompletionsWithScores(arg);
+  });
 
 program
   .command('setscore <completion> <score>')
@@ -30,7 +33,7 @@ program
   .option('-s, --with-scores')
   .action((prefixQuery, command) => {
     if (command.withScores) {
-      App.searchWithScores(prefixQuery)
+      App.search(prefixQuery, { withScores: true })
         .then(reply => console.log(reply));
     } else {
       App.search(prefixQuery)
@@ -43,10 +46,10 @@ program
   .option('-s, --with-scores')
   .action((prefixQuery, command) => {
     if (command.withScores) {
-      App.top5SuggestionsWithScores(prefixQuery)
+      App.search(prefixQuery, { limit: 5, withScores: true })
         .then(reply => console.log(reply));
     } else {
-      App.top5Suggestions(prefixQuery)
+      App.search(prefixQuery, { limit: 5 })
         .then(reply => console.log(reply));
     }
   });

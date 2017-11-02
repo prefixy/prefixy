@@ -2,7 +2,7 @@ const App = require("../../app");
 
 describe("App", () => {
   describe("extractPrefixes", () => {
-    xit("returns an array of prefixes for a completion", () => {
+    it("returns an array of prefixes for a completion", () => {
       expect(
         App.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
@@ -16,6 +16,12 @@ describe("App", () => {
       expect(
         App.insertCompletions
       ).toHaveBeenCalled();
+    });
+
+    it("throws a TypeError when the path is invalid", () => {
+      expect(
+        () => { App.importFile("spec/testtttt-data.json") }
+      ).toThrowError(TypeError);
     });
   });
 });

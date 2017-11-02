@@ -17,22 +17,6 @@ const client = redis.createClient();
 // currently expects array of completions in a json file
 
 
-// helpers
-
-const returnTopXSuggestions = function(suggestionCount) {
-  return prefixQuery => (
-    client.zrangeAsync(prefixQuery, 0, suggestionCount - 1)
-  );
-};
-
-const returnTopXSuggestionsWithScores = function(suggestionCount) {
-  return prefixQuery => (
-    client.zrangeAsync(
-      prefixQuery, 0, suggestionCount - 1, 'WITHSCORES'
-    )
-  );
-};
-
 // exported functions
 module.exports = {
   client: client,
@@ -43,7 +27,7 @@ module.exports = {
       // TO MAYBE:
       // data = fs.readFileSync(process.cwd() + path, "utf-8");
     } catch (e) {
-      console.log(`ERROR: ${e.path} is not a valid file path`);
+      throw new TypeError(`${e.path} is not a valid path`);
       return;
     }
     const dataJson = JSON.parse(data);
@@ -51,6 +35,12 @@ module.exports = {
   },
 
   insertCompletions: function(completions) {
+    if (!Array.isArray(completions)) {
+      throw new TypeError(
+        `The argument to insertCompletions must be an array`
+      );
+    }
+
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
       this.index(prefixes, completion);
@@ -61,6 +51,12 @@ module.exports = {
   // takes an array of completions with scores
   // e.g. [{ completion: "string", score: -13 }]
   insertCompletionsWithScores: function(completionsWithScores) {
+    if (!Array.isArray(completions)) {
+      throw new TypeError(
+        `The argument to insertCompletionsWithScores must be an array`
+      );
+    }
+
     completionsWithScores.forEach(item => {
       const prefixes = this.extractPrefixes(item.completion);
       this.index(prefixes, item.completion, item.score);
@@ -105,17 +101,15 @@ module.exports = {
     );
   },
 
-  search: function(prefixQuery) {
-    return this.client.zrangeAsync(prefixQuery, 0, -1);
-  },
+  search: function(prefixQuery, opts) {
+    const defaultOpts = { limit: 0, withScores: false };
+    opts = Object.assign({}, defaultOpts, opts);
+    const limit = opts.limit - 1;
 
-  searchWithScores: function(prefixQuery) {
-    return this.client.zrangeAsync(prefixQuery, 0, -1, 'WITHSCORES');
+    let args = [prefixQuery, 0, limit];
+    if (opts.withScores) args = args.concat('WITHSCORES');
+    return this.client.zrangeAsync(...args);
   },
-
-  top5Suggestions: returnTopXSuggestions(5),
-  top3Suggestions: returnTopXSuggestions(3),
-  top5SuggestionsWithScores: returnTopXSuggestionsWithScores(5),
 
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
