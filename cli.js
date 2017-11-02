@@ -14,7 +14,7 @@ program
 
 program
   .command('insert <completion>')
-  .option('-s, --with-score <score>')
+  .option('-s, --with-score <score>', 'add a score', '0')
   .action((completion, command) =>
     App.setScore(completion, -command.withScore)
   );
@@ -30,9 +30,11 @@ program
   .option('-s, --with-scores')
   .action((prefixQuery, command) => {
     if (command.withScores) {
-      App.searchWithScores(prefixQuery);
+      App.searchWithScores(prefixQuery)
+      .then(reply => console.log(reply));
     } else {
-      App.search(prefixQuery);
+      App.search(prefixQuery)
+      .then(reply => console.log(reply));
     }
   });
 
@@ -41,9 +43,11 @@ program
   .option('-s, --with-scores')
   .action((prefixQuery, command) => {
     if (command.withScores) {
-      App.top5SuggestionsWithScores(prefixQuery);
+      App.top5SuggestionsWithScores(prefixQuery)
+      .then(reply => console.log(reply));
     } else {
-      App.top5Suggestions(prefixQuery);
+      App.top5Suggestions(prefixQuery)
+      .then(reply => console.log(reply));
     }
   });
 
