@@ -1,4 +1,6 @@
 const App = require("../../app");
+const path = require("path");
+const fs = require("fs");
 
 describe("App", () => {
   describe("extractPrefixes", () => {
@@ -11,17 +13,27 @@ describe("App", () => {
 
   describe("importFile", () => {
     it("calls insertCompletions with parsed json data", () => {
+      const filePath = path.resolve(__dirname, "valid-data.json");
+      fs.writeFileSync(filePath, JSON.stringify(
+        ["tiffany han", "walid wahed", "jay shenk"]
+      ), "utf8");
+
       spyOn(App, "insertCompletions");
-      App.importFile("spec/test-data.json");
+      App.importFile(filePath);
       expect(
         App.insertCompletions
       ).toHaveBeenCalled();
+
+      fs.unlinkSync(filePath);
     });
 
-    it("throws a TypeError when the path is invalid", () => {
+    it("does not call insertCompletions when the path is invalid", () => {
+      spyOn(App, "insertCompletions");
+      App.importFile("spec/testtttttttttt-data.json");
+
       expect(
-        () => { App.importFile("spec/testtttt-data.json") }
-      ).toThrowError(TypeError);
+        App.insertCompletions
+      ).not.toHaveBeenCalled();
     });
   });
 });
