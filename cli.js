@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-const App = require("./prefixy");
+const path = require("path");
+const App = require(path.resolve(__dirname, "prefixy"));
 const program = require("commander");
 
 program

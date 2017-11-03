@@ -1,9 +1,10 @@
 const redis = require("redis");
-const App = require("../../prefixy");
 const bluebird = require("bluebird");
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
+const path = require("path");
+const App = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
 App.client = redis.createClient({ db: 1, prefix: "test:" });
 
 describe("App works with redis", () => {

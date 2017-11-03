@@ -1,6 +1,6 @@
-const App = require("../../prefixy");
 const path = require("path");
 const fs = require("fs");
+const App = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
 
 describe("App", () => {
   describe("extractPrefixes", () => {
