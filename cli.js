@@ -34,10 +34,10 @@ program
   .action((prefixQuery, command) => {
     if (command.withScores) {
       App.search(prefixQuery, { withScores: true })
-        .then(reply => console.log(reply));
+        .then(console.log);
     } else {
       App.search(prefixQuery)
-        .then(reply => console.log(reply));
+        .then(console.log);
     }
   });
 
@@ -47,10 +47,10 @@ program
   .action((prefixQuery, command) => {
     if (command.withScores) {
       App.search(prefixQuery, { limit: 5, withScores: true })
-        .then(reply => console.log(reply));
+        .then(console.log);
     } else {
       App.search(prefixQuery, { limit: 5 })
-        .then(reply => console.log(reply));
+        .then(console.log);
     }
   });
 
