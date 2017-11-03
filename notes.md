@@ -5,11 +5,106 @@ Future Development Notes:
 - explore process.cwd() for command line import
 - es6 import and export using babel? experimental features?
 - move extractPrefixes, index, remove, and valid... to helper fn file
+- DBC
+- think about renaming bump
 
 Possible Additions:
 - allow batch updating of scores
 - allow specifying scores in import
 - is "search" a good name for our command line instruction?
+
+=====================
+
+API Endpoints:
+
+get /search
+As a app developer, I want to hit this endpoint with a prefix.
+I expect the status of the response to be 200
+I expect the result to be a json of suggestions for this prefix.
+Request:
+{
+  prefix: "Go",
+  limit: 5,
+  withScores: true
+}
+
+Response:
+[
+  {
+    completion: "Goku",
+    score: -10000
+  },
+  {
+    ...
+  },
+  ...
+]
+
+Request:
+{
+  prefix: "Mr. M",
+}
+
+Response:
+["Mr. Mime", "Mr. Magoo", "Mr. Monster", "Mr. McDonald", "Mr. Macaroni"]
+
+put /increment
+As a app developer, I want to hit this endpoint with a completion
+I expect the completion score to be incremented
+and to be given a 200 to verify that happened
+and an object that includes the completion and the score
+
+Request:
+"Mr. Mime"
+
+Response:
+{
+  completion: "Mr. Mime",
+  score: -3001
+}
+
+post /import
+As an app developer, I expect to insert/update my prefix dictionary with the completions and optional scores supplied
+
+Request:
+["Mr. Mime", "Mr. Magoo", "Mr. Monster", "Mr. McDonald", "Mr. Macaroni"]
+
+OR
+
+[
+  {
+    completion: "Goku",
+    score: -10000
+  },
+  {
+    ...
+  },
+  ...
+]
+
+Response:
+
+ideally:
+202 that returns a queue address as part of location header
+queue address will return a 201 with payload once finished
+
+first stab at it:
+syncronous 204
+no body
+
+we have max 300 in bucket
+mr. mime in bucket
+but it becomes less popular and get kicked out of m's bucket
+but it still is in mr. m bucket
+user types mr. m and selects mr. mime
+increment mr. mime in every prefix that should belong to it
+  if prefix doesn't include mr. mime, because it was kicked out, we want to re-add it.
+
+dynamic dictionary:
+
+fixed dictionary with dynamic scoring:
+need zincrby to add if doesn't exist for bucket maintenance
+
 
 =====================
 2017-11-02 Meeting w/ Brandon
