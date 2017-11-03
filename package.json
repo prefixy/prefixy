@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node prefixy.js",
     "seed": "node seed.js",
     "test": "jasmine",
     "cli": "node cli.js"

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const App = require("./app");
+const App = require("./prefixy");
 const program = require("commander");
 
 program

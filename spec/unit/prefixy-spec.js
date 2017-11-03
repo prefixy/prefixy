@@ -1,4 +1,4 @@
-const App = require("../../app");
+const App = require("../../prefixy");
 const path = require("path");
 const fs = require("fs");
 
