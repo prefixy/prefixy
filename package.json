@@ -4,12 +4,23 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "seed": "node seed.js",
+    "test": "jasmine",
+    "cli": "node cli.js"
+  },
+  "bin": {
+    "prefixy": "./cli.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.5.1",
+    "commander": "^2.11.0",
     "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "jasmine": "^2.8.0"
   }
 }
