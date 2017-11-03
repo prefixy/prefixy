@@ -3,6 +3,8 @@ Future Development Notes:
   - later we will support multiple additions from file
 - only support single deletion of completions in CLI
 - explore process.cwd() for command line import
+- es6 import and export using babel? experimental features?
+- move extractPrefixes, index, remove, and valid... to helper fn file
 
 Possible Additions:
 - allow batch updating of scores

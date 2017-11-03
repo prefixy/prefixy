@@ -6,7 +6,7 @@ const program = require("commander");
 
 program
   .version('0.0.1')
-  .description(`Prefixy: a prefix hash trie that utilizes
+  .description(`Prefixy is a prefix hash trie that utilizes
     the skip list probabilistic data structure`);
 
 program
