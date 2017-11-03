@@ -7,6 +7,7 @@ Future Development Notes:
 - move extractPrefixes, index, remove, and valid... to helper fn file
 - DBC
 - think about renaming bump
+- profanity filter / ban list?
 
 Possible Additions:
 - allow batch updating of scores
@@ -17,7 +18,7 @@ Possible Additions:
 
 API Endpoints:
 
-get /search
+##get /completions
 As a app developer, I want to hit this endpoint with a prefix.
 I expect the status of the response to be 200
 I expect the result to be a json of suggestions for this prefix.
@@ -48,7 +49,8 @@ Request:
 Response:
 ["Mr. Mime", "Mr. Magoo", "Mr. Monster", "Mr. McDonald", "Mr. Macaroni"]
 
-put /increment
+##put /increment
+*only increments existing completions in dictionary*
 As a app developer, I want to hit this endpoint with a completion
 I expect the completion score to be incremented
 and to be given a 200 to verify that happened
@@ -63,14 +65,50 @@ Response:
   score: -3001
 }
 
-post /import
+##put /dynamic-increment
+*increments existing completions or adds it if not existing*
+
+==============================
+##increment discussion
+Right now want to simply use increment/dynamicIncrement so we don't have to hold state about whether or not the app developer is using a fixed or dynamic dictionary. Their choice of incrementing endpoint will result in one or the other.
+
+###dynamic dictionary desired endpoints (naive, no bucket limit)
+- increment: will increment existing or add new (handle selections/submissions)
+- import : ["oneword"]
+
+###fixed dictionary desired endpoints (always naive, no bucket limit)
+*we don't plan on supporting buckets for the fixed dictionary style
+because we don't handle inbound new additions from users*
+- increment: will only increment existing, not add new ones
+
+###dynamic dictionary desired endpoints (bucket limit)
+- increment: will increment existing and add new
+- this will need logic for kicking out 300th and adding new ones and so on
+- tabling this approach for now
+
+==
+we have max 300 in bucket
+mr. mime in bucket
+but it becomes less popular and get kicked out of m's bucket
+but it still is in mr. m bucket
+user types mr. m and selects mr. mime
+increment mr. mime in every prefix that should belong to it
+  if prefix doesn't include mr. mime, because it was kicked out, we want to re-add it.
+
+
+##post /completions
+(basically zadd for all the prefixes)
 As an app developer, I expect to insert/update my prefix dictionary with the completions and optional scores supplied
 
+Handles initial loading of data, handles mass updates, handles inserting one new completions, handles updating one completion
+
 Request:
+*adding new completions*
 ["Mr. Mime", "Mr. Magoo", "Mr. Monster", "Mr. McDonald", "Mr. Macaroni"]
 
 OR
 
+*adding/updating new/existing completions with scores*
 [
   {
     completion: "Goku",
@@ -82,6 +120,21 @@ OR
   ...
 ]
 
+OR
+
+*adding a new completion*
+["new completion"]
+
+or
+
+*updating the score of an existing completion*
+[
+  {
+    completion: "existing completion",
+    score: -300
+  }
+]
+
 Response:
 
 ideally:
@@ -89,21 +142,46 @@ ideally:
 queue address will return a 201 with payload once finished
 
 first stab at it:
-syncronous 204
+syncronous 204 (204 instead of 201 because we are not returning the object)
 no body
 
-we have max 300 in bucket
-mr. mime in bucket
-but it becomes less popular and get kicked out of m's bucket
-but it still is in mr. m bucket
-user types mr. m and selects mr. mime
-increment mr. mime in every prefix that should belong to it
-  if prefix doesn't include mr. mime, because it was kicked out, we want to re-add it.
 
-dynamic dictionary:
 
-fixed dictionary with dynamic scoring:
-need zincrby to add if doesn't exist for bucket maintenance
+##delete /completions
+Request:
+body: takes an array of completions
+  ["Mr. Mime", "Mr. Magoo", "Mr. Monster", "Mr. McDonald", "Mr. Macaroni"]
+  "String"
+
+Response:
+OK 204 did some stuff
+
+
+##put  /score
+Request:
+body: takes a string of a completion
+Response:
+OK 200, { completion: "string", score: -213 }
+
+
+# The summary
+post   /completions             # insert/update one or more completions
+delete /completions             # deletes one or more completions
+get    /completions             # search prefix "ja" 
+                                #   give me completions["jay", "jane", "jam"]
+
+put    /score                   # change score for a completion
+put    /increment               # increment score for a completion
+put    /dynamic-increment       # increment score for existing or add new comp
+
+Not providing just a string for post/delete completions, just expect the app developer to be able to wrap their string in an array.
+
+Tiffany: "they should just read the documentation"
+
+==
+
+
+
 
 
 =====================
