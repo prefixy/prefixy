@@ -10,8 +10,6 @@ bluebird.promisifyAll(redis.Multi.prototype);
 const client = redis.createClient();
 
 // later: configuration option - include full string
-// also clean up completions before insertCompletionsing
-// E.g. normalize case and whitespaces
 
 // path represents a relative path from directory of app.js
 // or absolute path
@@ -75,6 +73,7 @@ module.exports = {
 
   extractPrefixes: function(completion) {
     const prefixes = [];
+    completion = completion.toLowerCase();
     for (let i = 1; i <= completion.length; i++) {
       prefixes.push(completion.slice(0, i));
     }
@@ -98,7 +97,7 @@ module.exports = {
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
-    let args = [prefixQuery, 0, limit];
+    let args = [prefixQuery.toLowerCase(), 0, limit];
     if (opts.withScores) args = args.concat('WITHSCORES');
     return this.client.zrangeAsync(...args);
   },

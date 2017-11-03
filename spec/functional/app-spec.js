@@ -93,13 +93,42 @@ describe("App works with redis", () => {
           { completion: "eevee", score: -10 },
         ]
       );
-
       const prefix1 = await App.search("e");
 
       expect(prefix1).toEqual(['eevee', 'exeggcute']);
     });
   });
 
+  describe("deleteCompletions", () => {
+    it("removes completions from each of their prefixes", async () => {
+      await App.insertCompletions(["geodude", "ghastly", "graveler"]);
+      await App.deleteCompletions(["geodude", "graveler"]);
+      const results = await App.search("g");
+
+      expect(results).toEqual(["ghastly"]);
+    });
+  });
+
+  describe("bumpScore", () => {
+    it("bumps a completion's score by 1", async () => {
+      await App.insertCompletions(["jynx"]);
+      await App.bumpScore("jynx");
+      const result = await App.search("jynx", { withScores: true });
+
+      expect(result).toEqual(["jynx", "-1"]);
+    });
+  });
+
+  describe("setScore", () => {
+    it("inserts/updates a completion with a score", async () => {
+      await App.setScore("haunter", -20);
+      const result = await App.search("h", { withScores: true });
+
+      expect(result).toEqual(["haunter", "-20"]);
+    });
+  });
+
+  // write failing test for case
 });
 
 // App.client.flushdb();

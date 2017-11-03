@@ -9,6 +9,13 @@ describe("App", () => {
         App.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
     });
+
+    it("extracts the lower case prefixes of a completion", () => {
+      expect(
+        App.extractPrefixes("Mr. Mime")
+      ).toEqual(["m", "mr", "mr.", "mr. ", "mr. m",
+                 "mr. mi", "mr. mim", "mr. mime"]);
+    });
   });
 
   describe("importFile", () => {
@@ -89,6 +96,14 @@ describe("App", () => {
       expect(
         App.client.zrangeAsync
       ).toHaveBeenCalledWith("wo", 0, 4, 'WITHSCORES');
+    });
+
+    it("calls zrangeAsync with downcased prefixQuery", () => {
+      App.search("Mew Two");
+
+      expect(
+        App.client.zrangeAsync
+      ).toHaveBeenCalledWith("mew two", 0, -1);
     });
   });
 });

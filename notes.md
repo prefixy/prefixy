@@ -1,5 +1,3 @@
-
-
 Future Development Notes:
 - only support single additions of completions in CLI
   - later we will support multiple additions from file
