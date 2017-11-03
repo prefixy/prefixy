@@ -15,61 +15,61 @@ program
 program
   .command('insert <completion>')
   .option('-s, --with-score <score>', 'add a score', '0')
-  .action((completion, command) => {
+  .action(async (completion, command) => {
     const arg = [
       { completion: completion, score: -command.withScore }
     ];
-    App.insertCompletionsWithScores(arg);
+    await App.insertCompletionsWithScores(arg);
   });
 
 program
   .command('setscore <completion> <score>')
-  .action((completion, score) =>
-    App.setScore(completion, -score)
+  .action(async (completion, score) =>
+    await App.setScore(completion, -score)
   );
 
 program
   .command('search <prefixQuery>')
   .option('-s, --with-scores')
-  .action((prefixQuery, command) => {
+  .action(async (prefixQuery, command) => {
+    let result;
     if (command.withScores) {
-      App.search(prefixQuery, { withScores: true })
-        .then(console.log);
+      result = await App.search(prefixQuery, { withScores: true });
     } else {
-      App.search(prefixQuery)
-        .then(console.log);
+      result = await App.search(prefixQuery);
     }
+    console.log(result);
   });
 
 program
   .command('suggestions <prefixQuery>')
   .option('-s, --with-scores')
-  .action((prefixQuery, command) => {
+  .action(async (prefixQuery, command) => {
+    let result;
     if (command.withScores) {
-      App.search(prefixQuery, { limit: 5, withScores: true })
-        .then(console.log);
+      result = await App.search(prefixQuery, { limit: 5, withScores: true });
     } else {
-      App.search(prefixQuery, { limit: 5 })
-        .then(console.log);
+      result = await App.search(prefixQuery, { limit: 5 });
     }
+    console.log(result);
   });
 
 program
   .command('delete <completion>')
-  .action(completion =>
-    App.deleteCompletions([completion])
+  .action(async completion =>
+    await App.deleteCompletions([completion])
   );
 
 program
   .command('increment <completion>')
-  .action(completion =>
-    App.bumpScore(completion)
+  .action(async completion =>
+    await App.bumpScore(completion)
   );
 
 program
   .command('import <path>')
-  .action(path =>
-    App.importFile(path)
+  .action(async path =>
+    await App.importFile(path)
   );
 
 program.parse(process.argv);
