@@ -1,10 +1,10 @@
-- [0. API Documentation](#0)
-  - [1. GET /completions](#1)
-  - [2. GET /completions](#2)
-  - [3. GET /completions](#3)
-  - [4. GET /completions](#4)
-  - [5. GET /completions](#5)
-  - [6. GET /completions](#6)
+- [0. API Documentation](#0-api-documentation)
+  - [1. GET /completions](#1-get-completions)
+  - [2. POST /completions](#2-post-completions)
+  - [3. DELETE /completions](#3-delete-completions)
+  - [4. PUT /scores](#4-put-scores)
+  - [5. PUT /increment](#5-put-increment)
+  - [6. PUT /dynamic-increment](#6-put-dynamic-increment)
 
 # 0. API Documentation
 
