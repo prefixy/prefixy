@@ -180,7 +180,7 @@ The response status code is 204 No Content.
 
 ### 3.4. Error Response:
 
-## 4 PUT /score
+## 4. PUT /score
 
 As an app developer, I can use this endpoint to manually
 set the score of an existing completion. If the completion
