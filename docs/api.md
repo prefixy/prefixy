@@ -1,11 +1,19 @@
-# API Documentation
+- [0. API Documentation](#0)
+  - [1. GET /completions](#1)
+  - [2. GET /completions](#2)
+  - [3. GET /completions](#3)
+  - [4. GET /completions](#4)
+  - [5. GET /completions](#5)
+  - [6. GET /completions](#6)
 
-## GET /completions
+# 0. API Documentation
+
+## 1. GET /completions
 
 As an app developer, I can use this endpoint to get a list
 of top possible completions for a given prefix.
 
-### Expected Payload:
+### 1.1. Expected Payload:
 
 A `"prefix"` attribute must be included in the json
 request body.
@@ -18,7 +26,7 @@ The following optional attributes can also be included:
 If `"limit"` is not specified, the default limit of
 5 will be returned.
 
-### Example Request:
+### 1.2. Example Request:
 
 ```json
 {
@@ -34,7 +42,7 @@ If `"limit"` is not specified, the default limit of
 }
 ```
 
-### Successful Response:
+### 1.3. Successful Response:
 
 The response status code is 200 OK.
 
@@ -61,15 +69,15 @@ The response status code is 200 OK.
 ]
 ```
 
-### Error Response:
+### 1.4. Error Response:
 
-## POST /completions
+## 2. POST /completions
 
 As an app developer, I can use this endpoint to load
 new completions into my index. I can also use this endpoint
 to update existing completions in my index.
 
-### Expected Payload:
+### 2.1. Expected Payload:
 
 The json request body is expected to be either an
 array of strings or an array of objects.
@@ -77,7 +85,7 @@ array of strings or an array of objects.
 Whichever syntax is used, a completion must be specified.
 The `"score"` attribute is optional.
 
-### Example Request:
+### 2.2. Example Request:
 
 *adding new completions*
 
@@ -125,7 +133,7 @@ The `"score"` attribute is optional.
 ]
 ```
 
-### Successful Response:
+### 2.3. Successful Response:
 
 *ideally:*
 
@@ -136,19 +144,19 @@ queue address will return a 201 with payload once finished
 
 The response status code is 204 No Content.
 
-### Error Response:
+### 2.4. Error Response:
 
-## DELETE /completions
+## 3. DELETE /completions
 
 As an app developer, I can use this endpoint to delete
 existing completions in my index.
 
-### Expected Payload:
+### 3.1. Expected Payload:
 
 The json request body is expected to be an array of
 strings.
 
-### Example Request:
+### 3.2. Example Request:
 
 ```json
 [
@@ -166,13 +174,13 @@ strings.
 ]
 ```
 
-### Successful Response:
+### 3.3. Successful Response:
 
 The response status code is 204 No Content.
 
-### Error Response:
+### 3.4. Error Response:
 
-## PUT /score
+## 4 PUT /score
 
 As an app developer, I can use this endpoint to manually
 set the score of an existing completion. If the completion
@@ -180,12 +188,12 @@ does not yet exist in the index, the completion will
 be added to the index with its score set to the desired
 value.
 
-### Expected Payload:
+### 4.1. Expected Payload:
 
 The `"completion"` and `"score"` attributes must be
 included within the json request body.
 
-### Example Request:
+### 4.2. Example Request:
 
 ```json
 {
@@ -194,7 +202,7 @@ included within the json request body.
 }
 ```
 
-### Successful Response:
+### 4.3. Successful Response:
 
 The response status code is 200 OK or 201 Created.
 
@@ -205,25 +213,25 @@ The response status code is 200 OK or 201 Created.
 }
 ```
 
-### Error Response:
+### 4.4. Error Response:
 
-## PUT /increment
+## 5 PUT /increment
 
 As an app developer, I can use this endpoint to increment
 an existing completion's score by 1. An error will be
 returned if the completion does not exist in the index.
 
-### Expected Payload:
+### 5.1. Expected Payload:
 
 The json request body is expected to be a string.
 
-### Example Request:
+### 5.2. Example Request:
 
 ```json
 "Mr. Mime"
 ```
 
-### Successful Response:
+### 5.3. Successful Response:
 
 The response status code is 200 OK.
 
@@ -234,26 +242,26 @@ The response status code is 200 OK.
 }
 ```
 
-### Error Response:
+### 5.4. Error Response:
 
-## PUT /dynamic-increment
+## 6. PUT /dynamic-increment
 
 As an app developer, I can use this endpoint to increment
 an existing completion's score by 1. If the completion
 does not yet exist, the completion will be added to the
 index with its score set to 1.
 
-### Expected Payload:
+### 6.1. Expected Payload:
 
 The json request body is expected to be a string.
 
-### Example Request:
+### 6.2. Example Request:
 
 ```json
 "Mr. Mime"
 ```
 
-### Successful Response:
+### 6.3. Successful Response:
 
 The response status code is 200 OK or 201 Created.
 
@@ -264,4 +272,6 @@ The response status code is 200 OK or 201 Created.
 }
 ```
 
-### Error Response:
+### 6.4. Error Response:
+
+
