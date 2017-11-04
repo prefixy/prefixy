@@ -2,7 +2,7 @@
   - [1. GET /completions](#1-get-completions)
   - [2. POST /completions](#2-post-completions)
   - [3. DELETE /completions](#3-delete-completions)
-  - [4. PUT /scores](#4-put-scores)
+  - [4. PUT /score](#4-put-score)
   - [5. PUT /increment](#5-put-increment)
   - [6. PUT /dynamic-increment](#6-put-dynamic-increment)
 
@@ -215,7 +215,7 @@ The response status code is 200 OK or 201 Created.
 
 ### 4.4. Error Response:
 
-## 5 PUT /increment
+## 5. PUT /increment
 
 As an app developer, I can use this endpoint to increment
 an existing completion's score by 1. An error will be
