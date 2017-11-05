@@ -6,7 +6,7 @@ module.exports = async function(req, res, next) {
   let scores;
 
   try {
-    scores = await Prefixy.bumpScoreFixed(true);
+    scores = await Prefixy.bumpScoreFixed(completion);
   } catch(error) {
     error.message = "The request could not be processed";
     return next(error);

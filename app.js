@@ -30,13 +30,16 @@ app.use('/score', score);
 app.use('/increment', increment);
 app.use('/completions', completions);
 
-app.use(Celebrate.errors());
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('The requested endpoint could not be found');
   err.status = 404;
   next(err);
+});
+
+app.use(function(err, req, res, next) {
+  if (err.isJoi) err.status = 400;
+  return next(err);
 });
 
 // error handler
