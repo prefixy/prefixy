@@ -71,6 +71,8 @@ The response status code is 200 OK.
 
 ### 1.4. Error Response:
 
+Return status: 422 unprocessable entity
+
 ## 2. POST /completions
 
 As an app developer, I can use this endpoint to load
@@ -146,6 +148,8 @@ The response status code is 204 No Content.
 
 ### 2.4. Error Response:
 
+422 unprocessable entity
+
 ## 3. DELETE /completions
 
 As an app developer, I can use this endpoint to delete
@@ -179,6 +183,8 @@ strings.
 The response status code is 204 No Content.
 
 ### 3.4. Error Response:
+
+422 unprocessable entity
 
 ## 4. PUT /score
 
