@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const path = require("path");
-const App = require(path.resolve(__dirname, "prefixy"));
+const Prefixy = require(path.resolve(__dirname, "prefixy"));
 const program = require("commander");
 
 program
@@ -20,14 +20,14 @@ program
     const arg = [
       { completion: completion, score: -command.withScore }
     ];
-    await App.insertCompletionsWithScores(arg);
+    await Prefixy.insertCompletionsWithScores(arg);
   });
 
 program
   .command('setscore <completion> <score>')
-  .action(async (completion, score) =>
-    await App.setScore(completion, -score)
-  );
+  .action(async (completion, score) => {
+    const result = await Prefixy.setScore(completion, -score);
+  });
 
 program
   .command('search <prefixQuery>')
@@ -35,9 +35,9 @@ program
   .action(async (prefixQuery, command) => {
     let result;
     if (command.withScores) {
-      result = await App.search(prefixQuery, { withScores: true });
+      result = await Prefixy.search(prefixQuery, { withScores: true });
     } else {
-      result = await App.search(prefixQuery);
+      result = await Prefixy.search(prefixQuery);
     }
     console.log(result);
   });
@@ -48,9 +48,9 @@ program
   .action(async (prefixQuery, command) => {
     let result;
     if (command.withScores) {
-      result = await App.search(prefixQuery, { limit: 5, withScores: true });
+      result = await Prefixy.search(prefixQuery, { limit: 5, withScores: true });
     } else {
-      result = await App.search(prefixQuery, { limit: 5 });
+      result = await Prefixy.search(prefixQuery, { limit: 5 });
     }
     console.log(result);
   });
@@ -58,21 +58,22 @@ program
 program
   .command('delete <completion>')
   .action(async completion =>
-    await App.deleteCompletions([completion])
+    await Prefixy.deleteCompletions([completion])
   );
 
 program
   .command('increment <completion>')
-  .action(async completion =>
-    await App.bumpScore(completion)
-  );
+  .action(async completion => {
+    const scores = await Prefixy.bumpScoreFixed(completion)
+    console.log(scores);
+  });
 
 program
   .command('import <path>')
   .action(async path =>
-    await App.importFile(path)
+    await Prefixy.importFile(path)
   );
 
 program.parse(process.argv);
 
-App.client.quit();
+Prefixy.client.quit();

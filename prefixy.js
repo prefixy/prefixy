@@ -105,17 +105,35 @@ module.exports = {
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
   bumpScore: function(completion) {
+    const promises = [];
     const prefixes = this.extractPrefixes(completion);
+
     prefixes.forEach(prefix =>
-      this.client.zincrby(prefix, -1, completion)
+      promises.push(this.client.zincrbyAsync(prefix, -1, completion))
     );
-    return;
+
+    return Promise.all(promises);
+  },
+
+  bumpScoreFixed: function(completion) {
+    const promises = [];
+    const prefixes = this.extractPrefixes(completion);
+
+    prefixes.forEach(prefix =>
+      promises.push(this.client.zaddAsync(prefix, 'XX', 'INCR', -1, completion))
+    );
+
+    return Promise.all(promises);
   },
 
   setScore: function(completion, score) {
+    const promises = [];
     const prefixes = this.extractPrefixes(completion);
+
     prefixes.forEach(prefix =>
-      this.client.zadd(prefix, score, completion)
+      promises.push(this.client.zaddAsync(prefix, score, completion))
     );
+
+    return Promise.all(promises);
   },
 };

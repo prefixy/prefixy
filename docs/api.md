@@ -180,7 +180,7 @@ The response status code is 204 No Content.
 
 ### 3.4. Error Response:
 
-## 4 PUT /score
+## 4. PUT /score
 
 As an app developer, I can use this endpoint to manually
 set the score of an existing completion. If the completion
@@ -204,7 +204,7 @@ included within the json request body.
 
 ### 4.3. Successful Response:
 
-The response status code is 200 OK or 201 Created.
+The response status code is 200 OK.
 
 ```json
 {
@@ -223,12 +223,15 @@ returned if the completion does not exist in the index.
 
 ### 5.1. Expected Payload:
 
-The json request body is expected to be a string.
+The json request body must include a `"completion"`
+attribute.
 
 ### 5.2. Example Request:
 
 ```json
-"Mr. Mime"
+{
+  "completion": "Mr. Mime"
+}
 ```
 
 ### 5.3. Successful Response:
@@ -244,6 +247,9 @@ The response status code is 200 OK.
 
 ### 5.4. Error Response:
 
+A 404 Not Found will be returned if the completion
+does not exist in the index.
+
 ## 6. PUT /dynamic-increment
 
 As an app developer, I can use this endpoint to increment
@@ -253,17 +259,20 @@ index with its score set to 1.
 
 ### 6.1. Expected Payload:
 
-The json request body is expected to be a string.
+The json request body must include a `"completion"`
+attribute.
 
 ### 6.2. Example Request:
 
 ```json
-"Mr. Mime"
+{
+  "completion": "Mr. Mime"
+}
 ```
 
 ### 6.3. Successful Response:
 
-The response status code is 200 OK or 201 Created.
+The response status code is 200 OK.
 
 ```json
 {
