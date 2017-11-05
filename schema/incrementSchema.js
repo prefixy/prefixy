@@ -1,6 +1,6 @@
 const Celebrate = require('celebrate');
 const { Joi } = Celebrate;
 
-module.exports = {
+module.exports = Joi.object().keys({
   completion: Joi.string().required()
-};
+});

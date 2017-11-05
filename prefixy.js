@@ -116,24 +116,24 @@ module.exports = {
   },
 
   bumpScoreFixed: function(completion) {
-    const promises = [];
+    const zadds = [];
     const prefixes = this.extractPrefixes(completion);
 
     prefixes.forEach(prefix =>
-      promises.push(this.client.zaddAsync(prefix, 'XX', 'INCR', -1, completion))
+      zadds.push(this.client.zaddAsync(prefix, 'XX', 'INCR', -1, completion))
     );
 
-    return Promise.all(promises);
+    return Promise.all(zadds);
   },
 
   setScore: function(completion, score) {
-    const promises = [];
+    const zadds = [];
     const prefixes = this.extractPrefixes(completion);
 
     prefixes.forEach(prefix =>
-      promises.push(this.client.zaddAsync(prefix, score, completion))
+      zadds.push(this.client.zaddAsync(prefix, score, completion))
     );
 
-    return Promise.all(promises);
+    return Promise.all(zadds);
   },
 };

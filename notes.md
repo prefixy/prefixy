@@ -8,6 +8,7 @@ Future Development Notes:
 - DBC
 - think about renaming bump
 - profanity filter / ban list?
+- we should trim incoming strings
 
 Possible Additions:
 - allow batch updating of scores

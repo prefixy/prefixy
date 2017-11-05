@@ -10,7 +10,7 @@
 
 ## 1. GET /completions
 
-As an app developer, I can use this endpoint to get a list
+This endpoint can be used to get a list
 of top possible completions for a given prefix.
 
 ### 1.1. Expected Payload:
@@ -73,9 +73,9 @@ The response status code is 200 OK.
 
 ## 2. POST /completions
 
-As an app developer, I can use this endpoint to load
-new completions into my index. I can also use this endpoint
-to update existing completions in my index.
+This endpoint can be used to load
+new completions into your index. It can also be used
+to update existing completions in the index.
 
 ### 2.1. Expected Payload:
 
@@ -148,8 +148,8 @@ The response status code is 204 No Content.
 
 ## 3. DELETE /completions
 
-As an app developer, I can use this endpoint to delete
-existing completions in my index.
+This endpoint can be used to delete
+existing completions in the index.
 
 ### 3.1. Expected Payload:
 
@@ -182,7 +182,7 @@ The response status code is 204 No Content.
 
 ## 4. PUT /score
 
-As an app developer, I can use this endpoint to manually
+This endpoint can be used to manually
 set the score of an existing completion. If the completion
 does not yet exist in the index, the completion will
 be added to the index with its score set to the desired
@@ -215,11 +215,19 @@ The response status code is 200 OK.
 
 ### 4.4. Error Response:
 
+A 400 Bad Request will be returned if the json request body
+could not be parsed.
+
+A 500 Internal Server Error will be returned if the request
+could not be processed.
+
 ## 5 PUT /increment
 
-As an app developer, I can use this endpoint to increment
-an existing completion's score by 1. An error will be
-returned if the completion does not exist in the index.
+This endpoint can be used to increment
+an existing completion's score by 1. Nothing will occur
+if the completion does not exist in the index. See
+PUT /dyanamic-increment if you want the completion to be added
+if it does not exist in the index while trying to increment.
 
 ### 5.1. Expected Payload:
 
@@ -236,23 +244,19 @@ attribute.
 
 ### 5.3. Successful Response:
 
-The response status code is 200 OK.
-
-```json
-{
-  "completion": "Mr. Mime",
-  "score": -3001
-}
-```
+The response status code is 204 No Content.
 
 ### 5.4. Error Response:
 
-A 404 Not Found will be returned if the completion
-does not exist in the index.
+A 400 Bad Request will be returned if the json request body
+could not be parsed.
+
+A 500 Internal Server Error will be returned if the request
+could not be processed.
 
 ## 6. PUT /dynamic-increment
 
-As an app developer, I can use this endpoint to increment
+This endpoint can be used to increment
 an existing completion's score by 1. If the completion
 does not yet exist, the completion will be added to the
 index with its score set to 1.
