@@ -112,6 +112,15 @@ module.exports = {
     return;
   },
 
+  dynamicIncrementScore: function(completion) {
+    const prefixes = this.extractPrefixes(completion);
+    const commands = prefixes.map(prefix =>
+      ['zincrby', prefix, -1, completion]
+    );
+
+    return this.client.batch(commands).execAsync();
+  },
+
   setScore: function(completion, score) {
     const prefixes = this.extractPrefixes(completion);
     prefixes.forEach(prefix =>
