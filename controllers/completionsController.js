@@ -13,19 +13,28 @@ const formatCompletionsWithScores = completions => {
 
 module.exports = {
   get: async function(req, res) {
-    const prefix = req.query.prefix;
-    const opts = {
-      limit: req.query.limit || 5,
-      withScores: req.query.scores || false,
-    };
-    let completions = await Prefixy.search(prefix, opts);
+    let completions;
 
-    if (opts.withScores) {
-      completions = formatCompletionsWithScores(completions);
+    try {
+      const prefix = req.query.prefix;
+      const opts = {
+        limit: req.query.limit || 5,
+        withScores: req.query.scores || false,
+      };
+      completions = await Prefixy.search(prefix, opts);
+
+      if (opts.withScores) {
+        completions = formatCompletionsWithScores(completions);
+      }
+    } catch(error) {
+      error.status = 422;
+      next(error);
+      return;
     }
 
     res.json(completions);
   },
+
   post: async function(req, res, next) {
     try {
       const completions = req.body;
@@ -42,6 +51,7 @@ module.exports = {
 
     res.sendStatus(204);
   },
+
   delete: async function(req, res, next) {
     try {
       const completions = req.body;

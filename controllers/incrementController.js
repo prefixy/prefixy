@@ -3,14 +3,14 @@ const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 
 module.exports = async function(req, res, next) {
   const completion = req.body.completion;
-  let scores;
 
   try {
-    scores = await Prefixy.bumpScoreFixed(completion);
-  } catch(e) {
-    const error = "The request could not be processed";
-    res.status(422).json({error});
+    await Prefixy.fixedIncrementScore(completion);
+  } catch(error) {
+    error.status = 422;
+    next(error);
+    return;
   }
 
-  res.status(204).send();
+  res.sendStatus(204);
 };

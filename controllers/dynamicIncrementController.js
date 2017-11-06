@@ -3,7 +3,15 @@ const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 
 module.exports = async function(req, res, next) {
   const completion = req.body.completion;
-  const scores = await Prefixy.dynamicIncrementScore(completion);
 
-  res.json({ completion, score: scores[0] });
+  try {
+    await Prefixy.dynamicIncrementScore(completion);
+  } catch(error) {
+    error.status = 422;
+    next(error);
+    return;
+
+  }
+
+  res.sendStatus(204);
 };
