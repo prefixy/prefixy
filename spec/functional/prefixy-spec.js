@@ -110,10 +110,10 @@ describe("Prefixy works with redis", () => {
     });
   });
 
-  describe("bumpScore", () => {
-    it("bumps a completion's score by 1", async () => {
+  describe("fixedIncrementScore", () => {
+    it("increments a completion's score by 1", async () => {
       await Prefixy.insertCompletions(["jynx"]);
-      await Prefixy.bumpScore("jynx");
+      await Prefixy.fixedIncrementScore("jynx");
       const result = await Prefixy.search("jynx", { withScores: true });
 
       expect(result).toEqual(["jynx", "-1"]);

@@ -64,7 +64,7 @@ program
 program
   .command('increment <completion>')
   .action(async completion => {
-    const scores = await Prefixy.bumpScoreFixed(completion)
+    const scores = await Prefixy.fixedIncrementScore(completion)
     console.log(scores);
   });
 
