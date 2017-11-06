@@ -43,12 +43,16 @@ module.exports = {
   insertCompletions: function(completions) {
     validateInputIsArray(completions, "insertCompletions");
 
-    const indexes = [];
+    const commands = [];
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
-      indexes.push(this.index(prefixes, completion));
+
+      prefixes.forEach(prefix =>
+        commands.push(['zadd', prefix, 0, completion])
+      );
     });
-    return Promise.all(indexes);
+
+    return this.client.batch(commands).execAsync();
   },
 
   // takes an array of completions with scores
@@ -56,23 +60,31 @@ module.exports = {
   insertCompletionsWithScores: function(completionsWithScores) {
     validateInputIsArray(completionsWithScores, "insertCompletionsWithScores");
 
-    const indexes = [];
+    const commands = [];
     completionsWithScores.forEach(item => {
       const prefixes = this.extractPrefixes(item.completion);
-      indexes.push(this.index(prefixes, item.completion, item.score));
+
+      prefixes.forEach(prefix =>
+        commands.push(['zadd', prefix, item.score, item.completion])
+      );
     });
-    return Promise.all(indexes);
+
+    return this.client.batch(commands).execAsync();
   },
 
   deleteCompletions: function(completions) {
     validateInputIsArray(completions, "deleteCompletions");
 
-    const removals = [];
+    const commands = [];
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
-      removals.push(this.remove(prefixes, completion));
+
+      prefixes.forEach(prefix =>
+        commands.push(["zrem", prefix, completion])
+      );
     });
-    return Promise.all(removals);
+
+    return this.client.batch(commands).execAsync();
   },
 
   extractPrefixes: function(completion) {
@@ -82,22 +94,6 @@ module.exports = {
       prefixes.push(completion.slice(0, i));
     }
     return prefixes;
-  },
-
-  index: function(prefixes, completion, score=0) {
-    const commands = prefixes.map(prefix =>
-      ['zadd', prefix, score, completion]
-    );
-
-    return this.client.batch(commands).execAsync();
-  },
-
-  remove: function(prefixes, completion) {
-    const commands = prefixes.map(prefix =>
-      ['zrem', prefix, completion]
-    );
-
-    return this.client.batch(commands).execAsync();
   },
 
   search: function(prefixQuery, opts={}) {
