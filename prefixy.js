@@ -133,6 +133,15 @@ module.exports = {
     return Promise.all(zadds);
   },
 
+  dynamicIncrementScore: function(completion) {
+    const prefixes = this.extractPrefixes(completion);
+    const commands = prefixes.map(prefix =>
+      ['zincrby', prefix, -1, completion]
+    );
+
+    return this.client.batch(commands).execAsync();
+  },
+
   setScore: function(completion, score) {
     const zadds = [];
     const prefixes = this.extractPrefixes(completion);
