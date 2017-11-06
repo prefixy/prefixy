@@ -67,11 +67,12 @@ module.exports = {
   deleteCompletions: function(completions) {
     validateInputIsArray(completions, "deleteCompletions");
 
+    const removals = [];
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
-      this.remove(prefixes, completion);
+      removals.push(this.remove(prefixes, completion));
     });
-    return completions.length;
+    return Promise.all(removals);
   },
 
   extractPrefixes: function(completion) {
@@ -84,19 +85,19 @@ module.exports = {
   },
 
   index: function(prefixes, completion, score=0) {
-    const zadds = [];
-
-    prefixes.forEach(prefix =>
-      zadds.push(this.client.zaddAsync(prefix, score, completion))
+    const commands = prefixes.map(prefix =>
+      ['zadd', prefix, score, completion]
     );
 
-    return Promise.all(zadds);
+    return this.client.batch(commands).execAsync();
   },
 
   remove: function(prefixes, completion) {
-    prefixes.forEach(prefix =>
-      this.client.zrem(prefix, completion)
+    const commands = prefixes.map(prefix =>
+      ['zrem', prefix, completion]
     );
+
+    return this.client.batch(commands).execAsync();
   },
 
   search: function(prefixQuery, opts={}) {
@@ -111,28 +112,17 @@ module.exports = {
 
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
-  bumpScore: function(completion) {
-    const promises = [];
+  fixedIncrementScore: function(completion) {
     const prefixes = this.extractPrefixes(completion);
-
-    prefixes.forEach(prefix =>
-      promises.push(this.client.zincrbyAsync(prefix, -1, completion))
+    const commands = prefixes.map(prefix =>
+      ['zadd', prefix, 'XX', 'INCR', -1, completion]
     );
 
-    return Promise.all(promises);
+    return this.client.batch(commands).execAsync();
   },
 
-  bumpScoreFixed: function(completion) {
-    const zadds = [];
-    const prefixes = this.extractPrefixes(completion);
-
-    prefixes.forEach(prefix =>
-      zadds.push(this.client.zaddAsync(prefix, 'XX', 'INCR', -1, completion))
-    );
-
-    return Promise.all(zadds);
-  },
-
+  // similar to fixedIncrementScore, but will add completion
+  // to bucket if not present
   dynamicIncrementScore: function(completion) {
     const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
@@ -143,13 +133,11 @@ module.exports = {
   },
 
   setScore: function(completion, score) {
-    const zadds = [];
     const prefixes = this.extractPrefixes(completion);
-
-    prefixes.forEach(prefix =>
-      zadds.push(this.client.zaddAsync(prefix, score, completion))
+    const commands = prefixes.map(prefix =>
+      ['zadd', prefix, score, completion]
     );
 
-    return Promise.all(zadds);
+    return this.client.batch(commands).execAsync();
   },
 };

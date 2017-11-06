@@ -13,7 +13,7 @@ const incrementController = require(path.resolve(path.dirname(__dirname), "contr
 
 router.get("/", (req, res) => {
   res.send("Welcome to Prefixy");
-}
+});
 
 const formatCompletionsWithScores = completions => {
   return _.chunk(completions, 2).map(completion => (
