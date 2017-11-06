@@ -7,9 +7,9 @@ module.exports = async function(req, res, next) {
 
   try {
     scores = await Prefixy.bumpScoreFixed(completion);
-  } catch(error) {
-    error.message = "The request could not be processed";
-    return next(error);
+  } catch(e) {
+    const error = "The request could not be processed";
+    res.status(422).json({error});
   }
 
   res.status(204).send();

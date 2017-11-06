@@ -43,11 +43,12 @@ module.exports = {
   insertCompletions: function(completions) {
     validateInputIsArray(completions, "insertCompletions");
 
+    const indexes = [];
     completions.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
-      this.index(prefixes, completion);
+      indexes.push(this.index(prefixes, completion));
     });
-    return completions.length;
+    return Promise.all(indexes);
   },
 
   // takes an array of completions with scores
@@ -55,10 +56,12 @@ module.exports = {
   insertCompletionsWithScores: function(completionsWithScores) {
     validateInputIsArray(completionsWithScores, "insertCompletionsWithScores");
 
+    const indexes = [];
     completionsWithScores.forEach(item => {
       const prefixes = this.extractPrefixes(item.completion);
-      this.index(prefixes, item.completion, item.score);
+      indexes.push(this.index(prefixes, item.completion, item.score));
     });
+    return Promise.all(indexes);
   },
 
   deleteCompletions: function(completions) {
@@ -81,9 +84,13 @@ module.exports = {
   },
 
   index: function(prefixes, completion, score=0) {
+    const zadds = [];
+
     prefixes.forEach(prefix =>
-      this.client.zadd(prefix, score, completion)
+      zadds.push(this.client.zaddAsync(prefix, score, completion))
     );
+
+    return Promise.all(zadds);
   },
 
   remove: function(prefixes, completion) {

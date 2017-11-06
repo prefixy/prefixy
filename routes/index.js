@@ -1,8 +1,15 @@
 const express = require("express");
 const router = express.Router();
-var path = require('path');
+const path = require("path");
+const Celebrate = require("celebrate");
 const _ = require('lodash');
+
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
+
+const scoreSchema = require(path.resolve(path.dirname(__dirname), "schema/scoreSchema"));
+const scoreController = require(path.resolve(path.dirname(__dirname), "controllers/scoreController.js"));
+const incrementSchema = require(path.resolve(path.dirname(__dirname), "schema/incrementSchema"));
+const incrementController = require(path.resolve(path.dirname(__dirname), "controllers/incrementController.js"));
 
 router.get("/", (req, res) => {
   res.send("Welcome to Prefixy");
@@ -68,5 +75,8 @@ router.post('/completions', async function(req, res, next) {
 
   res.sendStatus(204);
 });
+
+router.put("/score", Celebrate({body: scoreSchema}), scoreController);
+router.put("/increment", Celebrate({body: incrementSchema}), incrementController);
 
 module.exports = router;

@@ -6,7 +6,23 @@
   - [5. PUT /increment](#5-put-increment)
   - [6. PUT /dynamic-increment](#6-put-dynamic-increment)
 
-# 0. API Documentation
+# API Documentation
+
+## Example Error Responses:
+
+All endpoints will return a 400 Bad Request if there was
+something wrong with the request json body.
+
+Otherwise, a 422 Unprocessable Entity will be returned if
+the server could not process the request.
+
+All endpoints will return errors in the following format:
+
+```
+{
+  "error": "The request could not be processed"
+}
+```
 
 ## 1. GET /completions
 
@@ -68,10 +84,6 @@ The response status code is 200 OK.
   ...
 ]
 ```
-
-### 1.4. Error Response:
-
-Return status: 422 unprocessable entity
 
 ## 2. POST /completions
 
@@ -146,10 +158,6 @@ queue address will return a 201 with payload once finished
 
 The response status code is 204 No Content.
 
-### 2.4. Error Response:
-
-422 unprocessable entity
-
 ## 3. DELETE /completions
 
 This endpoint can be used to delete
@@ -181,8 +189,6 @@ strings.
 ### 3.3. Successful Response:
 
 The response status code is 204 No Content.
-
-### 3.4. Error Response:
 
 ## 4. PUT /score
 
@@ -217,14 +223,6 @@ The response status code is 200 OK.
 }
 ```
 
-### 4.4. Error Response:
-
-A 400 Bad Request will be returned if the json request body
-could not be parsed.
-
-A 500 Internal Server Error will be returned if the request
-could not be processed.
-
 ## 5. PUT /increment
 
 This endpoint can be used to increment
@@ -250,14 +248,6 @@ attribute.
 
 The response status code is 204 No Content.
 
-### 5.4. Error Response:
-
-A 400 Bad Request will be returned if the json request body
-could not be parsed.
-
-A 500 Internal Server Error will be returned if the request
-could not be processed.
-
 ## 6. PUT /dynamic-increment
 
 This endpoint can be used to increment
@@ -280,15 +270,4 @@ attribute.
 
 ### 6.3. Successful Response:
 
-The response status code is 200 OK.
-
-```json
-{
-  "completion": "Mr. Mime",
-  "score": -3001
-}
-```
-
-### 6.4. Error Response:
-
-
+The response status code is 204 No Content.

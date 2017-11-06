@@ -33,7 +33,7 @@ app.use(function(req, res, next) {
 
 app.use(function(err, req, res, next) {
   if (err.isJoi) err.status = 400;
-  return next(err);
+  next(err);
 });
 
 // error handler
