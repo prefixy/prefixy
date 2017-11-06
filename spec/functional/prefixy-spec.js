@@ -128,9 +128,4 @@ describe("Prefixy works with redis", () => {
       expect(result).toEqual(["haunter", "-20"]);
     });
   });
-
-  // write failing test for case
 });
-
-// App.client.flushdb();
-// App.client.quit();

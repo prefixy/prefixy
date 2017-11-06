@@ -10,12 +10,14 @@ Future Development Notes:
 - profanity filter / ban list?
 - we should trim incoming strings
 - should we support categories?
+- the same completion with different casing has different scores
 
 
 Possible Additions:
 - allow batch updating of scores
 - allow specifying scores in import
 - is "search" a good name for our command line instruction?
+- unnegate score before returning?
 
 Soulheart docs
 -http://sethherr.github.io/soulheart/loading_data/

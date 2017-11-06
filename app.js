@@ -7,9 +7,6 @@ const bodyParser = require('body-parser');
 const Celebrate = require('celebrate');
 
 const index = require('./routes/index');
-const score = require('./routes/score');
-const increment = require('./routes/increment');
-const completions = require('./routes/completions');
 
 const app = express();
 
@@ -26,9 +23,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', index);
-app.use('/score', score);
-app.use('/increment', increment);
-app.use('/completions', completions);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -39,7 +33,7 @@ app.use(function(req, res, next) {
 
 app.use(function(err, req, res, next) {
   if (err.isJoi) err.status = 400;
-  return next(err);
+  next(err);
 });
 
 // error handler
