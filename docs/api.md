@@ -2,7 +2,7 @@
   - [1. GET /completions](#1-get-completions)
   - [2. POST /completions](#2-post-completions)
   - [3. DELETE /completions](#3-delete-completions)
-  - [4. PUT /scores](#4-put-scores)
+  - [4. PUT /score](#4-put-score)
   - [5. PUT /increment](#5-put-increment)
   - [6. PUT /dynamic-increment](#6-put-dynamic-increment)
 
@@ -70,6 +70,8 @@ The response status code is 200 OK.
 ```
 
 ### 1.4. Error Response:
+
+Return status: 422 unprocessable entity
 
 ## 2. POST /completions
 
@@ -146,6 +148,8 @@ The response status code is 204 No Content.
 
 ### 2.4. Error Response:
 
+422 unprocessable entity
+
 ## 3. DELETE /completions
 
 This endpoint can be used to delete
@@ -221,7 +225,7 @@ could not be parsed.
 A 500 Internal Server Error will be returned if the request
 could not be processed.
 
-## 5 PUT /increment
+## 5. PUT /increment
 
 This endpoint can be used to increment
 an existing completion's score by 1. Nothing will occur
