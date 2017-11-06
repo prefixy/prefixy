@@ -167,7 +167,7 @@ OK 200, { completion: "string", score: -213 }
 # The summary
 post   /completions             # insert/update one or more completions
 delete /completions             # deletes one or more completions
-get    /completions             # search prefix "ja" 
+get    /completions             # search prefix "ja"
                                 #   give me completions["jay", "jane", "jam"]
 
 put    /score                   # change score for a completion

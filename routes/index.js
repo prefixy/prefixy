@@ -35,4 +35,34 @@ router.put('/dynamic-increment', async function(req, res) {
   res.json({ completion, score: scores[0] });
 });
 
+router.delete('/completions', async function(req, res, next) {
+  try {
+    const completions = req.body;
+    await Prefixy.deleteCompletions(completions);
+  } catch(error) {
+    error.status = 422;
+    next(error);
+    return;
+  }
+
+  res.sendStatus(204);
+});
+
+router.post('/completions', async function(req, res, next) {
+  try {
+    const completions = req.body;
+    if (completions[0].completion) {
+      await Prefixy.insertCompletionsWithScores(completions);
+    } else {
+      await Prefixy.insertCompletions(completions);
+    }
+  } catch(error) {
+    error.status = 422;
+    next(error);
+    return;
+  }
+
+  res.sendStatus(204);
+});
+
 module.exports = router;
