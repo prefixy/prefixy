@@ -13,10 +13,10 @@ const formatCompletionsWithScores = completions => {
 
 module.exports = {
   get: async function(req, res) {
-    const prefix = req.body.prefix;
+    const prefix = req.query.prefix;
     const opts = {
-      limit: req.body.limit || 5,
-      withScores: req.body.withScores || false,
+      limit: req.query.limit || 5,
+      withScores: req.query.scores || false,
     };
     let completions = await Prefixy.search(prefix, opts);
 

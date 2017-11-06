@@ -31,31 +31,24 @@ of top possible completions for a given prefix.
 
 ### 1.1. Expected Payload:
 
-A `"prefix"` attribute must be included in the json
-request body.
+A `"prefix"` attribute must be included in the query string.
 
-The following optional attributes can also be included:
+The following optional params can also be included:
 
 - `"limit"`
-- `"withScores"`
+- `"scores"`
 
 If `"limit"` is not specified, the default limit of
 5 will be returned.
 
 ### 1.2. Example Request:
 
-```json
-{
-  "prefix": "Mr. M"
-}
+```
+"/completions?prefix=m"
 ```
 
-```json
-{
-  "prefix": "Go",
-  "limit": 5,
-  "withScores": true
-}
+```
+"/completions?prefix=m&limit=3&scores=true"
 ```
 
 ### 1.3. Successful Response:

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const Celebrate = require("celebrate");
-
+const { Joi } = Celebrate;
 
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 
@@ -14,9 +14,9 @@ const dynamicIncrementController = require(path.resolve(path.dirname(__dirname),
 const completionsSchema = require(path.resolve(path.dirname(__dirname), "schema/completionsSchema"));
 const completionsController = require(path.resolve(path.dirname(__dirname), "controllers/completionsController.js"));
 
-router.get('/completions', Celebrate({body: completionsSchema}), completionsController.get);
-router.post('/completions', completionsController.post);
-router.delete('/completions', completionsController.delete);
+router.get('/completions', Celebrate({query: completionsSchema.get}), completionsController.get);
+router.post('/completions', Celebrate({body: completionsSchema.post}), completionsController.post);
+router.delete('/completions', Celebrate({body: completionsSchema.delete}), completionsController.delete);
 router.put('/dynamic-increment', Celebrate({body: incrementSchema}), dynamicIncrementController);
 router.put("/increment", Celebrate({body: incrementSchema}), incrementController);
 router.put("/score", Celebrate({body: scoreSchema}), scoreController);
