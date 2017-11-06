@@ -7,9 +7,10 @@ module.exports = async function(req, res, next) {
 
   try {
     await Prefixy.setScore(completion, score);
-  } catch(e) {
-    const error = "The request could not be processed";
-    res.status(422).json({error});
+  } catch(error) {
+    error.status = 422;
+    next(error);
+    return;
   }
 
   res.json({completion, score});
