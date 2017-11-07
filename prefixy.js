@@ -131,7 +131,7 @@ module.exports = {
   setScore: function(completion, score) {
     const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
-      ['zadd', prefix, score, completion]
+      ['zadd', prefix, -score, completion]
     );
 
     return this.client.batch(commands).execAsync();

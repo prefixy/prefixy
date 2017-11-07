@@ -12,7 +12,6 @@ Future Development Notes:
 - should we support categories?
 - the same completion with different casing has different scores
 
-
 Possible Additions:
 - allow batch updating of scores
 - allow specifying scores in import

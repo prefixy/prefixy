@@ -26,7 +26,7 @@ program
 program
   .command('setscore <completion> <score>')
   .action(async (completion, score) => {
-    const result = await Prefixy.setScore(completion, -score);
+    const result = await Prefixy.setScore(completion, score);
   });
 
 program
