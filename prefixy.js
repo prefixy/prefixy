@@ -56,7 +56,7 @@ module.exports = {
   },
 
   // takes an array of completions with scores
-  // e.g. [{ completion: "string", score: -13 }]
+  // e.g. [{ completion: "string", score: 13 }]
   insertCompletionsWithScores: function(completionsWithScores) {
     validateInputIsArray(completionsWithScores, "insertCompletionsWithScores");
 
@@ -65,7 +65,7 @@ module.exports = {
       const prefixes = this.extractPrefixes(item.completion);
 
       prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, item.score, item.completion])
+        commands.push(['zadd', prefix, -item.score, item.completion])
       );
     });
 

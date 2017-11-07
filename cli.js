@@ -18,7 +18,7 @@ program
   .option('-s, --with-score <score>', 'add a score', '0')
   .action(async (completion, command) => {
     const arg = [
-      { completion: completion, score: -command.withScore }
+      { completion: completion, score: command.withScore }
     ];
     await Prefixy.insertCompletionsWithScores(arg);
   });
