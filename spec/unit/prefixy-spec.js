@@ -1,18 +1,18 @@
-const App = require("../../app");
 const path = require("path");
 const fs = require("fs");
+const Prefixy = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
 
-describe("App", () => {
+describe("Prefixy", () => {
   describe("extractPrefixes", () => {
     it("returns an array of prefixes for a completion", () => {
       expect(
-        App.extractPrefixes("waldo")
+        Prefixy.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
     });
 
     it("extracts the lower case prefixes of a completion", () => {
       expect(
-        App.extractPrefixes("Mr. Mime")
+        Prefixy.extractPrefixes("Mr. Mime")
       ).toEqual(["m", "mr", "mr.", "mr. ", "mr. m",
                  "mr. mi", "mr. mim", "mr. mime"]);
     });
@@ -29,7 +29,7 @@ describe("App", () => {
 
     beforeEach(() => {
       filePath = path.resolve(__dirname, "temp-data.json");
-      spyOn(App, "insertCompletions");
+      spyOn(Prefixy, "insertCompletions");
     });
 
     afterEach(() => {
@@ -43,66 +43,66 @@ describe("App", () => {
       const data = JSON.stringify(["tiff", "wal", "jay"]);
       saveFile(data);
 
-      App.importFile(filePath);
+      Prefixy.importFile(filePath);
 
       expect(
-        App.insertCompletions
+        Prefixy.insertCompletions
       ).toHaveBeenCalled();
     });
 
     it("does not call insertCompletions when the path is invalid", () => {
-      App.importFile("testtttttttttt-data.json");
+      Prefixy.importFile("testtttttttttt-data.json");
 
       expect(
-        App.insertCompletions
+        Prefixy.insertCompletions
       ).not.toHaveBeenCalled();
     });
 
     it("does not call insertCompletions when the JSON is invalid", () => {
       saveFile("['pikachu' 'bulbasaur' 'gengar']");
 
-      App.importFile(filePath);
+      Prefixy.importFile(filePath);
 
       expect(
-        App.insertCompletions
+        Prefixy.insertCompletions
       ).not.toHaveBeenCalled();
     });
   });
 
   describe("search", () => {
     beforeEach(() => {
-      spyOn(App.client, "zrangeAsync");
+      spyOn(Prefixy.client, "zrangeAsync");
     });
 
     it("calls zrangeAsync", () => {
-      App.search("wo");
+      Prefixy.search("wo");
 
       expect(
-        App.client.zrangeAsync
+        Prefixy.client.zrangeAsync
       ).toHaveBeenCalled();
     });
 
     it("calls zrangeAsync with correct arguments", () => {
-      App.search("wo");
+      Prefixy.search("wo");
 
       expect(
-        App.client.zrangeAsync
+        Prefixy.client.zrangeAsync
       ).toHaveBeenCalledWith("wo", 0, -1);
     });
 
     it("calls zrangeAsync with the options provided to search", () => {
-      App.search("wo", { limit: 5, withScores: true });
+      Prefixy.search("wo", { limit: 5, withScores: true });
 
       expect(
-        App.client.zrangeAsync
+        Prefixy.client.zrangeAsync
       ).toHaveBeenCalledWith("wo", 0, 4, 'WITHSCORES');
     });
 
     it("calls zrangeAsync with downcased prefixQuery", () => {
-      App.search("Mew Two");
+      Prefixy.search("Mew Two");
 
       expect(
-        App.client.zrangeAsync
+        Prefixy.client.zrangeAsync
       ).toHaveBeenCalledWith("mew two", 0, -1);
     });
   });

@@ -1,10 +1,11 @@
 {
-  "name": "prefix_search",
-  "version": "1.0.0",
+  "name": "prefixy",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "private": true,
   "scripts": {
-    "start": "node app.js",
+    "start": "nodemon ./bin/www",
     "seed": "node seed.js",
     "test": "jasmine",
     "cli": "node cli.js"
@@ -16,11 +17,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.17.0",
     "bluebird": "^3.5.1",
+    "body-parser": "~1.17.1",
+    "celebrate": "^6.0.0",
     "commander": "^2.11.0",
-    "redis": "^2.8.0"
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.3",
+    "express": "~4.15.2",
+    "lodash": "^4.17.4",
+    "morgan": "~1.8.1",
+    "redis": "^2.8.0",
+    "serve-favicon": "~2.4.2"
   },
   "devDependencies": {
-    "jasmine": "^2.8.0"
+    "jasmine": "^2.8.0",
+    "nodemon": "^1.12.1"
   }
 }

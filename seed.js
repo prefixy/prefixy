@@ -1,4 +1,5 @@
-const App = require("./app");
+const path = require("path");
+const App = require(path.resolve(__dirname, "prefixy"));
 
 const funNames = ['jay', 'tiffany', 'walid', 'kevin', 'waldo', 'wally', 'walden', 'jays', 'jacqueline', 'jay', 'jones', 'jay jay', 'homer jay simpson', 'tin', 'tim', 'timbuktu', 'till', 'true'];
 
@@ -26,5 +27,4 @@ const sample = [
 
 // App.insertCompletionsWithScores(sample);
 
-
-// App.client.quit();
+App.client.quit();
