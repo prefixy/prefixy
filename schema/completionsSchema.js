@@ -12,7 +12,7 @@ module.exports = {
     Joi.string(),
     Joi.object().keys({
       completion: Joi.string().required(),
-      score: Joi.number(),
+      score: Joi.number().required(),
     })),
 
   delete: Joi.array().items(Joi.string().required())
