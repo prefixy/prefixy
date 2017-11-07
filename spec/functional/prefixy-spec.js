@@ -13,7 +13,7 @@ describe("Prefixy works with redis", () => {
     Prefixy.client.flushdb();
   });
 
-  describe("insertCompletions", () => {
+  describe("inserting completions without scores", () => {
     it("adds completion to all of its prefixes", async () => {
       await Prefixy.insertCompletions(["charizard"]);
       const prefix1 = await Prefixy.search("c");
@@ -56,9 +56,9 @@ describe("Prefixy works with redis", () => {
     });
   });
 
-  describe("insertCompletionsWithScores", () => {
+  describe("inserting completions with scores", () => {
     it("adds completion with its score to all of its prefixes", async () => {
-      await Prefixy.insertCompletionsWithScores([{ completion: "wigglytuff", score: -20 }]);
+      await Prefixy.insertCompletions([{ completion: "wigglytuff", score: 20 }]);
 
       const prefix1 = await Prefixy.search("wi", { withScores: true });
       const prefix2 = await Prefixy.search("wiggly", { withScores: true });
@@ -70,11 +70,11 @@ describe("Prefixy works with redis", () => {
     });
 
     it("can add group of completions with scores", async () => {
-      await Prefixy.insertCompletionsWithScores(
+      await Prefixy.insertCompletions(
         [
-          { completion: "eevee", score: -10 },
-          { completion: "exeggcute", score: -50 },
-          { completion: "igglybuff", score: -5 },
+          { completion: "eevee", score: 10 },
+          { completion: "exeggcute", score: 50 },
+          { completion: "igglybuff", score: 5 },
         ]
       );
 
@@ -88,10 +88,10 @@ describe("Prefixy works with redis", () => {
     });
 
     it("items inserted with same score are returned lexicographically", async () => {
-      await Prefixy.insertCompletionsWithScores(
+      await Prefixy.insertCompletions(
         [
-          { completion: "exeggcute", score: -10 },
-          { completion: "eevee", score: -10 },
+          { completion: "exeggcute", score: 10 },
+          { completion: "eevee", score: 10 },
         ]
       );
       const prefix1 = await Prefixy.search("e");
@@ -117,15 +117,6 @@ describe("Prefixy works with redis", () => {
       const result = await Prefixy.search("jynx", { withScores: true });
 
       expect(result).toEqual(["jynx", "-1"]);
-    });
-  });
-
-  describe("setScore", () => {
-    it("inserts/updates a completion with a score", async () => {
-      await Prefixy.setScore("haunter", -20);
-      const result = await Prefixy.search("h", { withScores: true });
-
-      expect(result).toEqual(["haunter", "-20"]);
     });
   });
 });

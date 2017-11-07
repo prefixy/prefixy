@@ -27,45 +27,32 @@ const validateInputIsArray = (input, funcName) => {
 module.exports = {
   client: client,
   importFile: function(filePath) {
+    let json;
     let data;
-    let dataJson;
 
     try {
-      data = fs.readFileSync(path.resolve(process.cwd(), filePath), "utf-8");
-      dataJson = JSON.parse(data);
+      json = fs.readFileSync(path.resolve(process.cwd(), filePath), "utf-8");
+      data = JSON.parse(json);
     } catch (e) {
       return e.message;
     }
 
-    this.insertCompletions(dataJson);
+    this.insertCompletions(data);
   },
 
-  insertCompletions: function(completions) {
-    validateInputIsArray(completions, "insertCompletions");
+  // takes an array of strings or an array of completions with scores
+  // e.g. [{ completion: "string", score: 13 }]
+  insertCompletions: function(array) {
+    validateInputIsArray(array, "insertCompletions");
 
     const commands = [];
-    completions.forEach(completion => {
+    array.forEach(item => {
+      const completion = item.completion || item;
+      const score = item.score || 0;
       const prefixes = this.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, 0, completion])
-      );
-    });
-
-    return this.client.batch(commands).execAsync();
-  },
-
-  // takes an array of completions with scores
-  // e.g. [{ completion: "string", score: 13 }]
-  insertCompletionsWithScores: function(completionsWithScores) {
-    validateInputIsArray(completionsWithScores, "insertCompletionsWithScores");
-
-    const commands = [];
-    completionsWithScores.forEach(item => {
-      const prefixes = this.extractPrefixes(item.completion);
-
-      prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, -item.score, item.completion])
+        commands.push(['zadd', prefix, -score, completion])
       );
     });
 
@@ -123,15 +110,6 @@ module.exports = {
     const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
-    );
-
-    return this.client.batch(commands).execAsync();
-  },
-
-  setScore: function(completion, score) {
-    const prefixes = this.extractPrefixes(completion);
-    const commands = prefixes.map(prefix =>
-      ['zadd', prefix, -score, completion]
     );
 
     return this.client.batch(commands).execAsync();

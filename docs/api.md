@@ -2,9 +2,8 @@
   - [1. GET /completions](#1-get-completions)
   - [2. POST /completions](#2-post-completions)
   - [3. DELETE /completions](#3-delete-completions)
-  - [4. PUT /score](#4-put-score)
-  - [5. PUT /increment](#5-put-increment)
-  - [6. PUT /dynamic-increment](#6-put-dynamic-increment)
+  - [4. PUT /increment](#5-put-increment)
+  - [5. PUT /dynamic-increment](#6-put-dynamic-increment)
 
 # API Documentation
 
@@ -90,7 +89,8 @@ The json request body is expected to be either an
 array of strings or an array of objects.
 
 Whichever syntax is used, a completion must be specified.
-The `"score"` attribute is optional.
+If the array-of-objects syntax is used, the `"score"`
+attribute is also required.
 
 ### 2.2. Example Request:
 
@@ -183,46 +183,37 @@ strings.
 
 The response status code is 204 No Content.
 
-## 4. PUT /score
-
-This endpoint can be used to manually
-set the score of an existing completion. If the completion
-does not yet exist in the index, the completion will
-be added to the index with its score set to the desired
-value.
-
-### 4.1. Expected Payload:
-
-The `"completion"` and `"score"` attributes must be
-included within the json request body.
-
-### 4.2. Example Request:
-
-```json
-{
-  "completion": "string",
-  "score": -213
-}
-```
-
-### 4.3. Successful Response:
-
-The response status code is 200 OK.
-
-```json
-{
-  "completion": "string",
-  "score": -213
-}
-```
-
-## 5. PUT /increment
+## 4. PUT /increment
 
 This endpoint can be used to increment
 an existing completion's score by 1. Nothing will occur
 if the completion does not exist in the index. See
 PUT /dyanamic-increment if you want the completion to be added
 if it does not exist in the index while trying to increment.
+
+### 4.1. Expected Payload:
+
+The json request body must include a `"completion"`
+attribute.
+
+### 4.2. Example Request:
+
+```json
+{
+  "completion": "Mr. Mime"
+}
+```
+
+### 4.3. Successful Response:
+
+The response status code is 204 No Content.
+
+## 5. PUT /dynamic-increment
+
+This endpoint can be used to increment
+an existing completion's score by 1. If the completion
+does not yet exist, the completion will be added to the
+index with its score set to 1.
 
 ### 5.1. Expected Payload:
 
@@ -238,29 +229,5 @@ attribute.
 ```
 
 ### 5.3. Successful Response:
-
-The response status code is 204 No Content.
-
-## 6. PUT /dynamic-increment
-
-This endpoint can be used to increment
-an existing completion's score by 1. If the completion
-does not yet exist, the completion will be added to the
-index with its score set to 1.
-
-### 6.1. Expected Payload:
-
-The json request body must include a `"completion"`
-attribute.
-
-### 6.2. Example Request:
-
-```json
-{
-  "completion": "Mr. Mime"
-}
-```
-
-### 6.3. Successful Response:
 
 The response status code is 204 No Content.
