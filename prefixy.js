@@ -106,11 +106,37 @@ module.exports = {
 
   // similar to fixedIncrementScore, but will add completion
   // to bucket if not present
-  dynamicIncrementScore: function(completion) {
+  dynamicIncrementScore: function(completion, limit) {
+    if (limit >= 0) {
+      return this.dynamicBucketIncrementScore(completion, limit);
+    }
+
     const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
     );
+
+    return this.client.batch(commands).execAsync();
+  },
+
+  dynamicBucketIncrementScore: async function(completion, limit) {
+    const prefixes = this.extractPrefixes(completion);
+    const commands = [];
+    let count;
+    let last;
+
+    for (var i = 0; i < prefixes.length; i++) {
+      count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count >= limit) {
+        last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
+        newScore = last[1] - 1;
+        commands.push(['zremrangebyrank', prefixes[i], limit - 1, -1]);
+        commands.push(['zadd', prefixes[i], newScore, completion]);
+      } else {
+        commands.push(['zincrby', prefixes[i], -1, completion]);
+      }
+    }
 
     return this.client.batch(commands).execAsync();
   },

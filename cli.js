@@ -69,6 +69,12 @@ program
   });
 
 program
+  .command('dynamicIncrement <completion> [limit]')
+  .action(async (completion, limit) => {
+    const scores = await Prefixy.dynamicIncrementScore(completion, limit);
+  });
+
+program
   .command('import <path>')
   .action(async path =>
     await Prefixy.importFile(path)
@@ -76,4 +82,6 @@ program
 
 program.parse(process.argv);
 
-Prefixy.client.quit();
+// flush promises library
+// make sure all promises are resolved before this next line is invoked
+// Prefixy.client.quit();
