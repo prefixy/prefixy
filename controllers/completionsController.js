@@ -13,53 +13,48 @@ const formatCompletionsWithScores = completions => {
 
 module.exports = {
   get: async function(req, res) {
+    const prefix = req.query.prefix;
+    const opts = {
+      limit: req.query.limit || 5,
+      withScores: req.query.scores || false,
+    };
     let completions;
 
     try {
-      const prefix = req.query.prefix;
-      const opts = {
-        limit: req.query.limit || 5,
-        withScores: req.query.scores || false,
-      };
-      completions = await Prefixy.search(prefix, opts);
-
-      if (opts.withScores) {
-        completions = formatCompletionsWithScores(completions);
-      }
+      completions = await Prefixy.invoke(() => Prefixy.search(prefix, opts));
     } catch(error) {
       error.status = 422;
-      next(error);
-      return;
+      return next(error);
+    }
+
+    if (opts.withScores) {
+      completions = formatCompletionsWithScores(completions);
     }
 
     res.json(completions);
   },
 
   post: async function(req, res, next) {
+    const completions = req.body;
+
     try {
-      const completions = req.body;
-      if (completions[0].completion) {
-        await Prefixy.insertCompletionsWithScores(completions);
-      } else {
-        await Prefixy.insertCompletions(completions);
-      }
+      await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
     } catch(error) {
       error.status = 422;
-      next(error);
-      return;
+      return next(error);
     }
 
     res.sendStatus(204);
   },
 
   delete: async function(req, res, next) {
+    const completions = req.body;
+
     try {
-      const completions = req.body;
-      await Prefixy.deleteCompletions(completions);
+      await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
     } catch(error) {
       error.status = 422;
-      next(error);
-      return;
+      return next(error);
     }
 
     res.sendStatus(204);

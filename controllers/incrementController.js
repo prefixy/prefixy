@@ -5,11 +5,10 @@ module.exports = async function(req, res, next) {
   const completion = req.body.completion;
 
   try {
-    await Prefixy.fixedIncrementScore(completion);
+    await Prefixy.invoke(() => Prefixy.fixedIncrementScore(completion));
   } catch(error) {
     error.status = 422;
-    next(error);
-    return;
+    return next(error);
   }
 
   res.sendStatus(204);

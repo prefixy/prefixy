@@ -3,13 +3,13 @@ const Prefixy = require(path.resolve(__dirname, "prefixy"));
 
 const funNames = ['jay', 'tiffany', 'walid', 'kevin', 'waldo', 'wally', 'walden', 'jays', 'jacqueline', 'jay', 'jones', 'jay jay', 'homer jay simpson', 'tin', 'tim', 'timbuktu', 'till', 'true'];
 
-Prefixy.insertCompletions(funNames);
+Prefixy.invoke(() => Prefixy.insertCompletions(funNames));
 
-Prefixy.fixedIncrementScore("walid");
-Prefixy.fixedIncrementScore("waldo");
-Prefixy.fixedIncrementScore("waldo");
+Prefixy.invoke(() => Prefixy.fixedIncrementScore("walid"));
+Prefixy.invoke(() => Prefixy.fixedIncrementScore("waldo"));
+Prefixy.invoke(() => Prefixy.fixedIncrementScore("waldo"));
 
-Prefixy.insertCompletions([{completion: "walter", score: 500}]);
+Prefixy.invoke(() => Prefixy.insertCompletions([{completion: "walter", score: 500}]));
 
 const sample = [
   { completion: "mary", score: 20 },
@@ -25,6 +25,5 @@ const sample = [
   { completion: "walid", score: 1000 },
 ]
 
-Prefixy.insertCompletions(sample);
-
+Prefixy.invoke(() => Prefixy.insertCompletions(sample));
 Prefixy.client.quit();
