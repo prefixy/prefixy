@@ -1,5 +1,13 @@
 var form = document.querySelector('form');
 
+const getSuggestions = (term, suggest) => {
+  axios.get("http://localhost:3000/completions", {
+    params: {
+      prefix: term
+    }
+  }).then((response) => suggest(response.data))
+};
+
 const submitCompletion = (e) => {
   e.preventDefault();
 
@@ -8,18 +16,12 @@ const submitCompletion = (e) => {
   // axios.put("http://localhost:3000/increment", { completion });
 };
 
-var my_autoComplete = new autoComplete({
+new autoComplete({
   selector: 'input[type=text]',
   minChars: 1,
   delay: 0,
   cache: false,
-  source: function(term, suggest) {
-    axios.get("http://localhost:3000/completions", {
-      params: {
-        prefix: term
-      }
-    }).then((response) => suggest(response.data))
-  },
+  source: getSuggestions,
   onSelect: submitCompletion,
 });
 
