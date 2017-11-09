@@ -89,7 +89,6 @@ class Prefixy {
   }
 
   search(prefixQuery, opts={}) {
-    console.log("called")
     const defaultOpts = { limit: 0, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
