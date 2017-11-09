@@ -20,13 +20,16 @@ program
     const arg = [
       { completion: completion, score: command.withScore }
     ];
+
     await Prefixy.insertCompletions(arg);
+    Prefixy.client.quit();
   });
 
 program
   .command('setscore <completion> <score>')
   .action(async (completion, score) => {
-    // const result = await Prefixy.insertCompletions([{ completion, score }]);
+    await Prefixy.insertCompletions([{ completion, score }]);
+    Prefixy.client.quit();
   });
 
 program
@@ -53,19 +56,22 @@ program
     } else {
       result = await Prefixy.search(prefixQuery, { limit: 5 });
     }
+    Prefixy.client.quit();
     console.log(result);
   });
 
 program
   .command('delete <completion>')
-  .action(async completion =>
+  .action(async completion => {
     await Prefixy.deleteCompletions([completion])
-  );
+    Prefixy.client.quit();
+  });
 
 program
   .command('increment <completion>')
   .action(async completion => {
     const scores = await Prefixy.fixedIncrementScore(completion)
+    Prefixy.client.quit();
     console.log(scores);
   });
 
@@ -78,12 +84,9 @@ program
 
 program
   .command('import <path>')
-  .action(async path =>
+  .action(async path => {
     await Prefixy.importFile(path)
-  );
+    Prefixy.client.quit();
+  });
 
 program.parse(process.argv);
-
-// flush promises library
-// make sure all promises are resolved before this next line is invoked
-// Prefixy.client.quit();
