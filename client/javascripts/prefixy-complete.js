@@ -1,7 +1,7 @@
-function PrefixyComplete(input, url) {
+function PrefixyComplete(input, completionsUrl, incrementUrl) {
   this.input = input;
-  this.completionsUrl = url + '/completions';
-  this.dynamicIncrementUrl = url + '/dynamic-increment';
+  this.completionsUrl = completionsUrl
+  this.incrementUrl = incrementUrl;
 
   this.listUI = null;
   this.overlay = null;
@@ -84,7 +84,7 @@ PrefixyComplete.prototype.fetchSuggestions = function(query, callback) {
 PrefixyComplete.prototype.submitCompletion = function() {
   var completion = this.input.value;
 
-  axios.put("http://localhost:3000/dynamic-increment", { completion: completion });
+  axios.put(this.incrementUrl, { completion: completion });
 };
 
 PrefixyComplete.prototype.handleKeydown = function(event) {
