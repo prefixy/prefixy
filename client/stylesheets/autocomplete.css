@@ -1,0 +1,62 @@
+.app {
+  width: 400px;
+  margin: 100px auto 0;
+}
+
+.autocomplete-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.autocomplete-wrapper input {
+  position: relative;
+  z-index: 10;
+  background: transparent;
+}
+
+.autocomplete-ui {
+  list-style: none;
+  padding: 0px;
+  margin-top: 0;
+  box-shadow: 0 1px 2px grey;
+}
+
+.autocomplete-ui-choice {
+  padding: 5px;
+  border-bottom: solid 1px #ddd;
+}
+
+.autocomplete-ui-choice:hover {
+  background: #eee;
+  cursor: pointer;
+}
+
+.autocomplete-ui-choice.selected {
+  background: lightblue;
+}
+
+.autocomplete-ui-choice:last-of-type {
+  border-bottom: 0;
+}
+
+.autocomplete-ui-choice p {
+  margin: 0;
+}
+
+.autocomplete-overlay {
+  position: absolute;
+  top: .2em;
+  left: .2em;
+  z-index: 1;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.autocomplete-overlay:empty {
+  display: none;
+}
+
+.autocomplete-wrapper + input[type=submit] {
+  vertical-align: top;
+}

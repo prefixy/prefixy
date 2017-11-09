@@ -23,6 +23,24 @@ Soulheart docs
 
 =====================
 
+Client js:
+
+When the value of input changes
+  get request to app to get suggestions
+  display list of suggestions under input
+
+When suggestion is clicked
+  input value should update to suggestion
+  PUT request to app to increment score
+
+When form is submitted
+  PUT request to app to dynamic increment score
+
+Configuration:
+  how many suggestions to show
+
+=====================
+
 API Endpoints:
 
 ##get /completions

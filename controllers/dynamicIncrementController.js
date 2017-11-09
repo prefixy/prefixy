@@ -10,7 +10,6 @@ module.exports = async function(req, res, next) {
     error.status = 422;
     next(error);
     return;
-
   }
 
   res.sendStatus(204);
