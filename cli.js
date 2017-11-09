@@ -39,6 +39,7 @@ program
     } else {
       result = await Prefixy.search(prefixQuery);
     }
+    Prefixy.client.quit();
     console.log(result);
   });
 
@@ -72,6 +73,7 @@ program
   .command('dynamicIncrement <completion> [limit]')
   .action(async (completion, limit) => {
     const scores = await Prefixy.dynamicIncrementScore(completion, limit);
+    Prefixy.client.quit();
   });
 
 program
