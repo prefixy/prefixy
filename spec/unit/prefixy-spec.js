@@ -39,7 +39,7 @@ describe("Prefixy", () => {
       }
     });
 
-    it("calls insertCompletions with parsed json data", () => {
+    xit("calls insertCompletions with parsed json data", () => {
       const data = JSON.stringify(["tiff", "wal", "jay"]);
       saveFile(data);
 
@@ -50,7 +50,7 @@ describe("Prefixy", () => {
       ).toHaveBeenCalled();
     });
 
-    it("does not call insertCompletions when the path is invalid", () => {
+    xit("does not call insertCompletions when the path is invalid", () => {
       Prefixy.importFile("testtttttttttt-data.json");
 
       expect(
@@ -58,7 +58,7 @@ describe("Prefixy", () => {
       ).not.toHaveBeenCalled();
     });
 
-    it("does not call insertCompletions when the JSON is invalid", () => {
+    xit("does not call insertCompletions when the JSON is invalid", () => {
       saveFile("['pikachu' 'bulbasaur' 'gengar']");
 
       Prefixy.importFile(filePath);

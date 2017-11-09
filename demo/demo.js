@@ -11,6 +11,7 @@ const submitCompletion = (e) => {
 var my_autoComplete = new autoComplete({
   selector: 'input[type=text]',
   minChars: 1,
+  delay: 0,
   cache: false,
   source: function(term, suggest) {
     axios.get("http://localhost:3000/completions", {

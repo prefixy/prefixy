@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const fakeData = [];
-const count = 100000;
-const targetPath = path.resolve(__dirname, "./sample-data/sample4.json");
+const count = 10000;
+const targetPath = path.resolve(__dirname, "sample-data/sample.json");
 
 for (var i = 0; i < count; i++) {
   fakeData.push("waldo " + faker.name.lastName() + ", " + faker.name.firstName());
