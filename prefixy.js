@@ -7,11 +7,10 @@ const JSONStream = require("JSONStream");
 const { Transform } = require("stream");
 const { spawn } = require("child_process");
 const { logMemory } = require(path.resolve(__dirname, "utils"));
-
 const bluebird = require("bluebird");
+
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
-const client = redis.createClient();
 
 // later: configuration option - include full string
 
@@ -48,7 +47,7 @@ const translator = new Transform({
   transform(item, encoding, callback) {
     const completion = item.completion || item;
     const score = item.score || 0;
-    const prefixes = this.extractPrefixes(completion);
+    const prefixes = Prefixy.extractPrefixes(completion);
 
     let chunk = "";
     // logging fn here
@@ -60,20 +59,33 @@ const translator = new Transform({
   }
 });
 
-// exported functions
-module.exports = {
-  client: client,
+class Prefixy {
+  constructor() {}
 
-  extractPrefixes: function(completion) {
+  static extractPrefixes(completion) {
     const prefixes = [];
     completion = completion.toLowerCase();
     for (let i = 1; i <= completion.length; i++) {
       prefixes.push(completion.slice(0, i));
     }
     return prefixes;
-  },
+  }
 
-  importFile: function(filePath) {
+  async invoke(cb) {
+    this.client = redis.createClient();
+    let result;
+
+    try {
+      result = await cb();
+    } catch(e) {
+      console.log(e);
+    }
+
+    this.client.quit();
+    return result;
+  }
+
+  importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
     const redis = spawn("redis-cli", ["--pipe"],
@@ -83,17 +95,18 @@ module.exports = {
     // json.pipe(parser).pipe(this.ts).pipe(file);
 
     json.pipe(parser).pipe(translator).pipe(redis.stdin);
-  },
+  }
 
   // takes an array of strings or an array of completions with scores
   // e.g. [{ completion: "string", score: 13 }]
-  insertCompletions: function(array) {
-    // validateInputIsArray(array, "insertCompletions");
+  insertCompletions(array) {
+    validateInputIsArray(array, "insertCompletions");
+
     const commands = [];
     array.forEach(item => {
       const completion = item.completion || item;
       const score = item.score || 0;
-      const prefixes = this.extractPrefixes(completion);
+      const prefixes = Prefixy.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
         commands.push(['zadd', prefix, -score, completion])
@@ -101,14 +114,14 @@ module.exports = {
     });
 
     return this.client.batch(commands).execAsync();
-  },
+  }
 
-  deleteCompletions: function(completions) {
+  deleteCompletions(completions) {
     validateInputIsArray(completions, "deleteCompletions");
 
     const commands = [];
     completions.forEach(completion => {
-      const prefixes = this.extractPrefixes(completion);
+      const prefixes = Prefixy.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
         commands.push(["zrem", prefix, completion])
@@ -116,9 +129,9 @@ module.exports = {
     });
 
     return this.client.batch(commands).execAsync();
-  },
+  }
 
-  search: function(prefixQuery, opts={}) {
+  search(prefixQuery, opts={}) {
     const defaultOpts = { limit: 0, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
@@ -126,36 +139,37 @@ module.exports = {
     let args = [prefixQuery.toLowerCase(), 0, limit];
     if (opts.withScores) args = args.concat('WITHSCORES');
     return this.client.zrangeAsync(...args);
-  },
+  }
 
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
-  fixedIncrementScore: function(completion) {
-    const prefixes = this.extractPrefixes(completion);
+  fixedIncrementScore(completion) {
+    const prefixes = Prefixy.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zadd', prefix, 'XX', 'INCR', -1, completion]
     );
 
     return this.client.batch(commands).execAsync();
-  },
+  }
 
   // similar to fixedIncrementScore, but will add completion
   // to bucket if not present
-  dynamicIncrementScore: function(completion, limit) {
+
+  dynamicIncrementScore(completion, limit) {
     if (limit >= 0) {
       return this.dynamicBucketIncrementScore(completion, limit);
     }
 
-    const prefixes = this.extractPrefixes(completion);
+    const prefixes = Prefixy.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
     );
 
     return this.client.batch(commands).execAsync();
-  },
+  }
 
-  dynamicBucketIncrementScore: async function(completion, limit) {
-    const prefixes = this.extractPrefixes(completion);
+  async dynamicBucketIncrementScore(completion, limit) {
+    const prefixes = Prefixy.extractPrefixes(completion);
     const commands = [];
     let count;
     let last;
@@ -174,5 +188,8 @@ module.exports = {
     }
 
     return this.client.batch(commands).execAsync();
-  },
-};
+  }
+}
+
+module.exports = new Prefixy();
+

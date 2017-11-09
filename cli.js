@@ -14,79 +14,103 @@ program
   .action(() => console.log('PONG'));
 
 program
+  .command('import <path>')
+  .action(async path => {
+    try {
+      Prefixy.invoke(() => Prefixy.importFile(path));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+program
   .command('insert <completion>')
   .option('-s, --with-score <score>', 'add a score', '0')
   .action(async (completion, command) => {
-    const arg = [
-      { completion: completion, score: command.withScore }
-    ];
+    const score = command.withScore;
+    const arg = [{ completion, score }];
 
-    await Prefixy.insertCompletions(arg);
-    Prefixy.client.quit();
+    try {
+      await Prefixy.invoke(() => Prefixy.insertCompletions(arg));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program
   .command('setscore <completion> <score>')
   .action(async (completion, score) => {
-    await Prefixy.insertCompletions([{ completion, score }]);
-    Prefixy.client.quit();
+    try {
+      await Prefixy.invoke(() => Prefixy.insertCompletions([{ completion, score }]));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+program
+  .command('increment <completion>')
+  .action(async completion => {
+    try {
+      await Prefixy.invoke(() => Prefixy.fixedIncrementScore(completion));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+program
+  .command('dynamicIncrement <completion> [limit]')
+  .action(async (completion, limit) => {
+    try {
+      await Prefixy.invoke(() => Prefixy.dynamicIncrementScore(completion, limit));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program
   .command('search <prefixQuery>')
   .option('-s, --with-scores')
   .action(async (prefixQuery, command) => {
+    const withScores = command.withScores;
+    const args = [prefixQuery, { withScores }];
     let result;
-    if (command.withScores) {
-      result = await Prefixy.search(prefixQuery, { withScores: true });
-    } else {
-      result = await Prefixy.search(prefixQuery);
+
+    try {
+      result = await Prefixy.invoke(() => Prefixy.search(...args));
+    } catch(e) {
+      console.log(e);
     }
-    Prefixy.client.quit();
+
     console.log(result);
   });
 
 program
   .command('suggestions <prefixQuery>')
+  .option('-l, --limit <limit>', 'add a limit', '5')
   .option('-s, --with-scores')
   .action(async (prefixQuery, command) => {
+    const withScores = command.withScores;
+    const limit = command.limit;
+    const args = [prefixQuery, { withScores, limit }];
     let result;
-    if (command.withScores) {
-      result = await Prefixy.search(prefixQuery, { limit: 5, withScores: true });
-    } else {
-      result = await Prefixy.search(prefixQuery, { limit: 5 });
+
+    try {
+      result = await Prefixy.invoke(() => Prefixy.search(...args));
+    } catch(e) {
+      console.log(e);
     }
-    Prefixy.client.quit();
+
     console.log(result);
   });
 
 program
   .command('delete <completion>')
   .action(async completion => {
-    await Prefixy.deleteCompletions([completion])
-    Prefixy.client.quit();
-  });
-
-program
-  .command('increment <completion>')
-  .action(async completion => {
-    const scores = await Prefixy.fixedIncrementScore(completion)
-    Prefixy.client.quit();
-    console.log(scores);
-  });
-
-program
-  .command('dynamicIncrement <completion> [limit]')
-  .action(async (completion, limit) => {
-    const scores = await Prefixy.dynamicIncrementScore(completion, limit);
-    Prefixy.client.quit();
-  });
-
-program
-  .command('import <path>')
-  .action(async path => {
-    await Prefixy.importFile(path)
-    Prefixy.client.quit();
+    try {
+      await Prefixy.invoke(() => Prefixy.deleteCompletions([completion]));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program.parse(process.argv);
