@@ -1,13 +1,14 @@
 function PrefixyComplete(input, url) {
   this.input = input;
-  this.completionsUrl = url + '/completions?prefix=';
+  this.completionsUrl = url + '/completions';
+  this.dynamicIncrementUrl = url + '/dynamic-increment';
 
   this.listUI = null;
   this.overlay = null;
 
   this.wrapInput();
   this.createUI();
-  this.valueChanged = debounce(this.valueChanged.bind(this), 100);
+  this.valueChanged = debounce(this.valueChanged.bind(this), 0);
   this.bindEvents();
 
   this.reset();
@@ -73,15 +74,17 @@ PrefixyComplete.prototype.draw = function() {
 };
 
 PrefixyComplete.prototype.fetchSuggestions = function(query, callback) {
-  var request = new XMLHttpRequest();
+  axios.get(this.completionsUrl, {
+    params: {
+      prefix: query
+    }
+  }).then((response) => callback(response.data));
+};
 
-  request.addEventListener('load', function() {
-    callback(request.response);
-  }.bind(this));
+PrefixyComplete.prototype.submitCompletion = function() {
+  var completion = this.input.value;
 
-  request.open('GET', this.completionsUrl + encodeURIComponent(query));
-  request.responseType = 'json';
-  request.send();
+  axios.put("http://localhost:3000/dynamic-increment", { completion: completion });
 };
 
 PrefixyComplete.prototype.handleKeydown = function(event) {
@@ -94,6 +97,7 @@ PrefixyComplete.prototype.handleKeydown = function(event) {
       this.reset();
       break;
     case 'Enter':
+      this.submitCompletion();
       this.reset();
       break;
     case 'ArrowUp':
@@ -139,6 +143,7 @@ PrefixyComplete.prototype.reset = function(event) {
   this.selectedIndex = null;
   this.previousValue = null;
   this.bestSuggestionIndex = null;
+  this.input.value = '';
   this.draw();
 };
 
