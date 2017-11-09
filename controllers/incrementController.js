@@ -8,8 +8,7 @@ module.exports = async function(req, res, next) {
     await Prefixy.fixedIncrementScore(completion);
   } catch(error) {
     error.status = 422;
-    next(error);
-    return;
+    return next(error);
   }
 
   res.sendStatus(204);

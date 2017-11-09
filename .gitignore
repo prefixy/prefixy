@@ -1,4 +1,5 @@
 /node_modules
+/sample-data
 *.rdb
 
 .DS_Store
