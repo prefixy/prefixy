@@ -176,6 +176,7 @@ class Prefixy {
 
     for (var i = 0; i < prefixes.length; i++) {
       count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+      let newScore;
 
       if (count >= limit) {
         last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
