@@ -3,6 +3,10 @@ const redis = require("redis");
 // to pass in custom config options
 const fs = require("fs");
 const path = require("path");
+const JSONStream = require("JSONStream");
+const { Transform } = require("stream");
+const { spawn } = require("child_process");
+const { logMemory } = require(path.resolve(__dirname, "utils"));
 const bluebird = require("bluebird");
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -22,6 +26,39 @@ const validateInputIsArray = (input, funcName) => {
   }
 };
 
+const byteSize = (str) => {
+  return String(Buffer.byteLength(String(str), "utf8"));
+};
+
+const toRedisProtocol = (command) => {
+  let protocol = "";
+  protocol += "*" + String(command.length) + "\r\n"
+  command.forEach(arg => {
+    protocol += "$" + byteSize(arg) + "\r\n";
+    protocol += String(arg) + "\r\n";
+  });
+  // console.log(protocol);
+  return protocol;
+};
+
+const translator = new Transform({
+  objectMode: true,
+
+  transform(item, encoding, callback) {
+    const completion = item.completion || item;
+    const score = item.score || 0;
+    const prefixes = Prefixy.extractPrefixes(completion);
+
+    let chunk = "";
+    // logging fn here
+    prefixes.forEach(prefix =>
+      chunk += toRedisProtocol(['zadd', prefix, -score, completion])
+    );
+
+    callback(null, chunk);
+  }
+});
+
 class Prefixy {
   constructor() {}
 
@@ -36,29 +73,35 @@ class Prefixy {
 
   async invoke(cb) {
     this.client = redis.createClient();
-    const result = await cb();
+    let result;
+
+    try {
+      result = await cb();
+    } catch(e) {
+      console.log(e);
+    }
+
     this.client.quit();
     return result;
   }
 
   importFile(filePath) {
-    let json;
-    let data;
+    const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
+    const parser = JSONStream.parse("*");
+    const redis = spawn("redis-cli", ["--pipe"],
+      { stdio: ["pipe", process.stdout, process.stderr] });
 
-    try {
-      json = fs.readFileSync(path.resolve(process.cwd(), filePath), "utf-8");
-      data = JSON.parse(json);
-    } catch (e) {
-      return e.message;
-    }
+    // const file = fs.createWriteStream(path.resolve(__dirname, "sample-data/protocol.txt"), {"flags": "a"});
+    // json.pipe(parser).pipe(this.ts).pipe(file);
 
-    this.insertCompletions(data);
+    json.pipe(parser).pipe(translator).pipe(redis.stdin);
   }
 
   // takes an array of strings or an array of completions with scores
   // e.g. [{ completion: "string", score: 13 }]
   insertCompletions(array) {
     validateInputIsArray(array, "insertCompletions");
+
     const commands = [];
     array.forEach(item => {
       const completion = item.completion || item;
@@ -111,7 +154,12 @@ class Prefixy {
 
   // similar to fixedIncrementScore, but will add completion
   // to bucket if not present
-  dynamicIncrementScore(completion) {
+
+  dynamicIncrementScore(completion, limit) {
+    if (limit >= 0) {
+      return this.dynamicBucketIncrementScore(completion, limit);
+    }
+
     const prefixes = Prefixy.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
@@ -119,6 +167,29 @@ class Prefixy {
 
     return this.client.batch(commands).execAsync();
   }
+
+  async dynamicBucketIncrementScore(completion, limit) {
+    const prefixes = Prefixy.extractPrefixes(completion);
+    const commands = [];
+    let count;
+    let last;
+
+    for (var i = 0; i < prefixes.length; i++) {
+      count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count >= limit) {
+        last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
+        newScore = last[1] - 1;
+        commands.push(['zremrangebyrank', prefixes[i], limit - 1, -1]);
+        commands.push(['zadd', prefixes[i], newScore, completion]);
+      } else {
+        commands.push(['zincrby', prefixes[i], -1, completion]);
+      }
+    }
+
+    return this.client.batch(commands).execAsync();
+  }
 }
 
 module.exports = new Prefixy();
+

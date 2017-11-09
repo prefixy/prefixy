@@ -3,7 +3,6 @@
 const path = require("path");
 const Prefixy = require(path.resolve(__dirname, "prefixy"));
 const program = require("commander");
-const errorMsg = "Oops! Something went wrong... Please try again.";
 
 program
   .version('0.0.1')
@@ -16,9 +15,13 @@ program
 
 program
   .command('import <path>')
-  .action(async path =>
-    await Prefixy.invoke(() => Prefixy.importFile(path));
-  );
+  .action(async path => {
+    try {
+      Prefixy.invoke(() => Prefixy.importFile(path));
+    } catch(e) {
+      console.log(e);
+    }
+  });
 
 program
   .command('insert <completion>')
@@ -30,7 +33,7 @@ program
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions(arg));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
     }
   });
 
@@ -40,7 +43,7 @@ program
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions([{ completion, score }]));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
     }
   });
 
@@ -50,7 +53,17 @@ program
     try {
       await Prefixy.invoke(() => Prefixy.fixedIncrementScore(completion));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
+    }
+  });
+
+program
+  .command('dynamicIncrement <completion> [limit]')
+  .action(async (completion, limit) => {
+    try {
+      await Prefixy.invoke(() => Prefixy.dynamicIncrementScore(completion, limit));
+    } catch(e) {
+      console.log(e);
     }
   });
 
@@ -65,7 +78,7 @@ program
     try {
       result = await Prefixy.invoke(() => Prefixy.search(...args));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
     }
 
     console.log(result);
@@ -84,7 +97,7 @@ program
     try {
       result = await Prefixy.invoke(() => Prefixy.search(...args));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
     }
 
     console.log(result);
@@ -93,11 +106,10 @@ program
 program
   .command('delete <completion>')
   .action(async completion => {
-
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions([completion]));
     } catch(e) {
-      console.log(errorMsg);
+      console.log(e);
     }
   });
 
