@@ -16,11 +16,15 @@ program
 program
   .command('import <path>')
   .action(async path => {
+    let result;
+
     try {
-      Prefixy.invoke(() => Prefixy.importFile(path));
+      result = await Prefixy.invoke(() => Prefixy.importFile(path));
     } catch(e) {
       console.log(e);
     }
+
+    console.log("\n", result);
   });
 
 program
