@@ -116,6 +116,61 @@ class Prefixy {
     return this.client.batch(commands).execAsync();
   }
 
+  alternateInsertCompletions(array) {
+    validateInputIsArray(array, "insertCompletions");
+
+    const commands = [];
+    array.forEach(item => {
+      const completion = item.completion || item;
+      const score = item.score || 0;
+      const prefixes = Prefixy.extractPrefixes(completion);
+
+      prefixes.forEach(prefix =>
+        commands.push(['zadd', prefix, -score, completion])
+      );
+    });
+
+    return this.client.batch(commands).execAsync();
+  }
+
+  async persistCompletion(completion) {
+    const prefixes = Prefixy.extractPrefixes(completion[0]);
+    const result = [];
+    const commands = [];
+    let targetPath;
+    let data;
+    let completions;
+
+    prefixes.forEach(async prefix => {
+      completions = await this.client.zrangeAsync(prefix, 0, -1, 'WITHSCORES');
+      targetPath = path.resolve(__dirname, `data/${prefix}.json`);
+      data = JSON.stringify(completions);
+
+      fs.writeFile(targetPath, data, 'utf8', (err) => {
+        if (err) {
+          return console.log(err);
+        }
+
+        console.log(`${prefix} saved`);
+      });
+    });
+  }
+
+  async loadPrefixFromDisk(prefix) {
+    await this.client.zremrangebyrank(prefix, 0, -1);
+
+    const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
+    const commands = [];
+    const json = fs.readFileSync(targetPath, 'utf8');
+    const data = JSON.parse(json);
+
+    for (var i = 0; i < data.length; i += 2) {
+      commands.push(['zadd', prefix, data[i + 1], data[i]]);
+    }
+
+    return this.client.batch(commands).execAsync();
+  }
+
   deleteCompletions(completions) {
     validateInputIsArray(completions, "deleteCompletions");
 

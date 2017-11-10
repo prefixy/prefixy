@@ -113,4 +113,24 @@ program
     }
   });
 
+program
+  .command('persist <completion>')
+  .action(async completion => {
+    try {
+      await Prefixy.invoke(() => Prefixy.persistCompletion([completion]));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+program
+  .command('load <prefix>')
+  .action(async prefix => {
+    try {
+      await Prefixy.invoke(() => Prefixy.loadPrefixFromDisk(prefix));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
 program.parse(process.argv);
