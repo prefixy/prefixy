@@ -1,19 +1,5 @@
 # Config Documentation
 
-Prefixy expects that you already have a redis server
-up and running. In addition, Prefixy also expects
-that you have a `maxmemory` limit set on your redis
-server. This limit should be set in a `redis.conf` file.
-
-## Example Redis configuration
-
-```
-  maxmemory 2mb
-  maxmemory-policy allkeys-lru
-```
-
-# Config Documentation
-
 ## Redis configuration
 
 Prefixy expects that you already have a redis server
@@ -47,9 +33,9 @@ please see the following pages:
 
 ## Prefixy configuration
 
-You can set custom configuration options for Prefixy.
-Just create a file named `prefixy-config.json` in the
-`Prefixy` project directory.
+Did you know you can set custom configuration options
+for Prefixy? All you have to do is create a file named
+`prefixy-config.json` in the `Prefixy` project directory.
 
 ### Example Prefixy coniguration
 
@@ -59,7 +45,7 @@ In `prefixy-config.json`:
 {
   "redis": "redis://:p4ssw0rd@10.0.1.1:6380/15",
   "maxMemory": 250,
-  "bucketLimit": 50,
+  "bucketLimit": 100,
   "minChars": 1,
   "suggestionCount": 10
 }
@@ -70,13 +56,13 @@ In `prefixy-config.json`:
 #### "redis"
  - This is a `redis url`, which will be used to
  connect to the redis server. Defaults to
- "redis://127.0.0.1:6379/0".
+ `"redis://127.0.0.1:6379/0"`.
 
 #### "maxMemory"
  - `Prefixy` will perform better if it knows
  the `maxmemory` limit set on your redis server.
  The value of `"maxMemory"` is expected to be an
- integer representing some number of MB. For instance,
+ integer representing some amount of MB. For instance,
  `250` is interpreted as `250MB`.
 
 #### "suggestionCount"
@@ -91,8 +77,8 @@ In `prefixy-config.json`:
  - Prefixy will only store prefixes with the
  specified amount of minimum characters. The
  default value of `"minChars"` is `3`.
- - This is recommended as a space-saving measure,
- if you don't need to show suggestions until a miminum
+ - This is recommended as a space-saving measure, since
+ you usually don't need to show suggestions until a miminum
  amount of characters has been typed by the user.
 
 #### "bucketLimit"
@@ -108,7 +94,7 @@ In `prefixy-config.json`:
  an adequate runway for completions to rise to the top.
  - As far as specific numbers go, we think a `10:1`
  ratio of completions to prefixes is plenty to guarantee
- adequate runway.
+ the adequate runway needed.
 
 ### References
 
