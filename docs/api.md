@@ -1,10 +1,3 @@
-- [0. API Documentation](#0-api-documentation)
-  - [1. GET /completions](#1-get-completions)
-  - [2. POST /completions](#2-post-completions)
-  - [3. DELETE /completions](#3-delete-completions)
-  - [4. PUT /increment](#5-put-increment)
-  - [5. PUT /dynamic-increment](#6-put-dynamic-increment)
-
 # API Documentation
 
 ## Example Error Responses:

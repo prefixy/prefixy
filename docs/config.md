@@ -53,19 +53,19 @@ In `prefixy-config.json`:
 
 ### Configuration Options
 
-#### "redis"
+#### `"redis"`
  - This is a `redis url`, which will be used to
  connect to the redis server. Defaults to
  `"redis://127.0.0.1:6379/0"`.
 
-#### "maxMemory"
+#### `"maxMemory"`
  - `Prefixy` will perform better if it knows
  the `maxmemory` limit set on your redis server.
  The value of `"maxMemory"` is expected to be an
  integer representing some amount of MB. For instance,
  `250` is interpreted as `250MB`.
 
-#### "suggestionCount"
+#### `"suggestionCount"`
  - How many suggestions should be returned to the
  user? The default `"suggestionCount"` value is `5`.
  - It should be noted that this value is only a
@@ -73,7 +73,7 @@ In `prefixy-config.json`:
  by specifying a `limit` when interacting with
  Prefixy via its command line interface or API endpoints.
 
-#### "minChars"
+#### `"minChars"`
  - Prefixy will only store prefixes with the
  specified amount of minimum characters. The
  default value of `"minChars"` is `3`.
@@ -81,7 +81,7 @@ In `prefixy-config.json`:
  you usually don't need to show suggestions until a miminum
  amount of characters has been typed by the user.
 
-#### "bucketLimit"
+#### `"bucketLimit"`
  - How many completions should Prefixy store for
  a given prefix? The default `"bucketLimit"` is a
  very conservative `300`, but we recommend setting
