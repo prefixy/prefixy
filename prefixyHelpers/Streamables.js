@@ -1,16 +1,16 @@
 const { Transform, Writable } = require("stream");
 const path = require("path");
-const { extractPrefixes } = require(path.resolve(__dirname, "utils"));
 
 class Translator extends Transform {
-  constructor(options={ objectMode: true }) {
+  constructor(Prefixy, options={ objectMode: true }) {
     super(options);
+    this.Prefixy = Prefixy;
   }
 
   _transform(item, encoding, callback) {
     const completion = item.completion || item;
     const score = item.score || 0;
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.Prefixy.extractPrefixes(completion);
 
     let commands = [];
     prefixes.forEach(prefix =>
@@ -22,9 +22,9 @@ class Translator extends Transform {
 }
 
 class Writer extends Writable {
-  constructor(client, options={ objectMode: true }) {
+  constructor(Prefixy, options={ objectMode: true }) {
     super(options);
-    this.client = client;
+    this.Prefixy = Prefixy;
   }
 
   static logMemory(task) {
@@ -40,7 +40,7 @@ class Writer extends Writable {
     Writer.logMemory("This import");
 
     try {
-      result = await this.client.batch(commands).execAsync();
+      result = await this.Prefixy.client.batch(commands).execAsync();
     } catch(e) {
       callback(e);
     }
