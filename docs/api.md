@@ -184,7 +184,7 @@ strings.
 
 The response status code is 204 No Content.
 
-## 4.` PUT /increment`
+## 4. `PUT /increment`
 
 This endpoint can be used to increment
 an existing completion's score by 1. Nothing will occur
