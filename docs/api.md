@@ -5,8 +5,8 @@
   1. [`GET /completions`](#1-get-completions)
   2. [`POST /completions`](#2-post-completions)
   3. [`DELETE /completions`](#3-delete-completions)
-  4. [`PUT /increment`](#5-put-increment)
-  5. [`PUT /dynamic-increment`](#6-put-dynamic-increment)
+  4. [`PUT /increment`](#4-put-increment)
+  5. [`PUT /dynamic-increment`](#5-put-dynamic-increment)
 
 ## Example Error Responses:
 
