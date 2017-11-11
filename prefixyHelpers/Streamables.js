@@ -3,28 +3,21 @@ const path = require("path");
 const { extractPrefixes } = require(path.resolve(__dirname, "utils"));
 
 class Translator extends Transform {
-  constructor(options={ objectMode: true }) {
+  constructor(Prefixy, options={ objectMode: true }) {
     super(options);
+    this.Prefixy = Prefixy;
   }
 
   _transform(item, encoding, callback) {
-    const completion = item.completion || item;
-    const score = item.score || 0;
-    const prefixes = extractPrefixes(completion);
-
-    let commands = [];
-    prefixes.forEach(prefix =>
-      commands.push(['zadd', prefix, -score, completion])
-    );
-
+    const commands = this.prefixy.commandsToAddCompletion(item);
     callback(null, commands);
   }
 }
 
 class Writer extends Writable {
-  constructor(client, options={ objectMode: true }) {
+  constructor(Prefixy, options={ objectMode: true }) {
     super(options);
-    this.client = client;
+    this.Prefixy = Prefixy;
   }
 
   static logMemory(task) {
@@ -39,13 +32,9 @@ class Writer extends Writable {
     console.log("Writing to redis, please wait...");
     Writer.logMemory("This import");
 
-    try {
-      result = await this.client.batch(commands).execAsync();
-    } catch(e) {
-      callback(e);
-    }
-
-    callback();
+    this.Prefixy.client.batch(commands).execAsync()
+      .then(() => callback())
+      .catch(callback);
   }
 }
 

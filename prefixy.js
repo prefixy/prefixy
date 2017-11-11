@@ -45,8 +45,8 @@ class Prefixy {
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    const translator = new Translator();
-    const writer = new Writer(this.client);
+    const translator = new Translator(this);
+    const writer = new Writer(this);
 
     const promise = new Promise((resolve, reject) => {
       json.pipe(parser).pipe(translator).pipe(writer);
@@ -61,17 +61,24 @@ class Prefixy {
     validateInputIsArray(array, "insertCompletions");
 
     const commands = [];
-    array.forEach(item => {
-      const completion = item.completion || item;
-      const score = item.score || 0;
-      const prefixes = extractPrefixes(completion);
-
-      prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, -score, completion])
-      );
-    });
+    array.forEach(item =>
+      commands.push(...this.commandsToAddCompletion(item))
+    );
 
     return this.client.batch(commands).execAsync();
+  }
+
+  commandsToAddCompletion(item) {
+    const completion = item.completion || item;
+    const score = item.score || 0;
+    const prefixes = extractPrefixes(completion);
+
+    let commands = [];
+    prefixes.forEach(prefix =>
+      commands.push(['zadd', prefix, -score, completion])
+    );
+
+    return commands;
   }
 
   deleteCompletions(completions) {
