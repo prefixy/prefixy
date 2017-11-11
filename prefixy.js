@@ -30,18 +30,19 @@ class Prefixy {
     const opts = Prefixy.parseOpts();
 
     this.redis = opts.redis;
-    this.bucketLimit = opts.bucketLimit;
-    this.minChars = opts.minChars;
+    this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
+    this.minChars = opts.minChars;
+    this.bucketLimit = opts.bucketLimit;
   }
 
   static defaultOpts() {
     return {
       redis: "redis://127.0.0.1:6379/0",
       maxMemory: 500,
-      bucketLimit: 300,
+      suggestionCount: 5,
       minChars: 3,
-      suggestionCount: 5
+      bucketLimit: 300
     };
   }
 
