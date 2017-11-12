@@ -112,7 +112,6 @@ class Prefixy {
 
   // similar to fixedIncrementScore, but will add completion
   // to bucket if not present
-
   dynamicIncrementScore(completion, limit) {
     if (limit >= 0) {
       return this.dynamicBucketIncrementScore(completion, limit);
@@ -147,6 +146,20 @@ class Prefixy {
     }
 
     return this.client.batch(commands).execAsync();
+  }
+
+  async importInsert(completion) {
+    const prefixes = extractPrefixes(completion);
+    // temporarily hard coded; change when we have as a config variable
+    const bucketLimit = 30;
+
+    for (let i = 0; i < prefixes.length; i++) {
+      let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count < bucketLimit) {
+        await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
+      }
+    }
   }
 }
 
