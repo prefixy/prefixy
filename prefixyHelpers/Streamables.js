@@ -2,17 +2,17 @@ const { Transform, Writable } = require("stream");
 const path = require("path");
 const { extractPrefixes } = require(path.resolve(__dirname, "utils"));
 
-class Translator extends Transform {
-  constructor(Prefixy, options={ objectMode: true }) {
-    super(options);
-    this.Prefixy = Prefixy;
-  }
+// class Translator extends Transform {
+//   constructor(Prefixy, options={ objectMode: true }) {
+//     super(options);
+//     this.Prefixy = Prefixy;
+//   }
 
-  _transform(item, encoding, callback) {
-    const commands = this.prefixy.commandsToAddCompletion(item);
-    callback(null, commands);
-  }
-}
+//   _transform(item, encoding, callback) {
+//     const commands = this.Prefixy.commandsToAddCompletion(item);
+//     callback(null, commands);
+//   }
+// }
 
 class Writer extends Writable {
   constructor(Prefixy, options={ objectMode: true }) {
@@ -26,11 +26,13 @@ class Writer extends Writable {
       ${Math.round(used * 100) / 100} MB`);
   }
 
-  async _write(commands, encoding, callback) {
+  async _write(item, encoding, callback) {
     let result;
 
     console.log("Writing to redis, please wait...");
     Writer.logMemory("This import");
+
+    const commands = this.Prefixy.commandsToAddCompletion(item);
 
     this.Prefixy.client.batch(commands).execAsync()
       .then(() => callback())
@@ -39,6 +41,6 @@ class Writer extends Writable {
 }
 
 module.exports = {
-  Translator,
+  // Translator,
   Writer
 };

@@ -4,7 +4,7 @@ const redis = require("redis");
 const fs = require("fs");
 const path = require("path");
 const JSONStream = require("JSONStream");
-const { Translator, Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
+const { Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
 const { extractPrefixes } = require(path.resolve(__dirname, "prefixyHelpers/utils"));
 const bluebird = require("bluebird");
 
@@ -45,11 +45,11 @@ class Prefixy {
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    const translator = new Translator(this);
+    // const translator = new Translator(this);
     const writer = new Writer(this);
 
     const promise = new Promise((resolve, reject) => {
-      json.pipe(parser).pipe(translator).pipe(writer);
+      json.pipe(parser).pipe(writer);
       writer.on("finish", () => resolve("Import finished"));
     });
     return promise;
