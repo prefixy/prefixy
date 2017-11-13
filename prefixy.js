@@ -195,7 +195,8 @@ class Prefixy {
   // Disk Persistence Methods
 
   async loadPrefixFromDisk(prefix) {
-    await this.client.zremrangebyrank(prefix, 0, -1);
+    // If we need to clear out the completions for a given prefix:
+    // await this.client.zremrangebyrank(prefix, 0, -1);
 
     const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
     const commands = [];
@@ -211,7 +212,7 @@ class Prefixy {
       commands.push(['zadd', prefix, data[i + 1], data[i]]);
     }
 
-    return await this.client.batch(commands).execAsync();
+    return this.client.batch(commands).execAsync();
   }
 
   async persistPrefix(prefix) {
