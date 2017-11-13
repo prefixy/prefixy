@@ -1,18 +1,5 @@
-const { Transform, Writable } = require("stream");
+const { Writable } = require("stream");
 const path = require("path");
-const { extractPrefixes } = require(path.resolve(__dirname, "utils"));
-
-// class Translator extends Transform {
-//   constructor(Prefixy, options={ objectMode: true }) {
-//     super(options);
-//     this.Prefixy = Prefixy;
-//   }
-
-//   _transform(item, encoding, callback) {
-//     const commands = this.Prefixy.commandsToAddCompletion(item);
-//     callback(null, commands);
-//   }
-// }
 
 class Writer extends Writable {
   constructor(Prefixy, options={ objectMode: true }) {
@@ -41,6 +28,5 @@ class Writer extends Writable {
 }
 
 module.exports = {
-  // Translator,
   Writer
 };

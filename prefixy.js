@@ -1,21 +1,22 @@
 const redis = require("redis");
-// TODO: make createClient its own method, in order
-// to pass in custom config options
 const fs = require("fs");
 const path = require("path");
 const JSONStream = require("JSONStream");
 const { Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
-const { extractPrefixes } = require(path.resolve(__dirname, "prefixyHelpers/utils"));
+
 const bluebird = require("bluebird");
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
+
+const CONFIG_FILE = path.resolve(__dirname, "prefixy-config.json");
 
 // later: configuration option - include full string
 
 // path represents a relative path from directory of app.js
 // or absolute path
 // currently expects array of completions in a json file
+
 
 const validateInputIsArray = (input, funcName) => {
   if (!Array.isArray(input)) {
@@ -26,26 +27,55 @@ const validateInputIsArray = (input, funcName) => {
 };
 
 class Prefixy {
-  constructor() {}
+  constructor() {
+    const opts = Prefixy.parseOpts();
 
-  async invoke(cb) {
-    this.client = redis.createClient();
-    let result;
+    this.redis = opts.redis;
+    this.maxMemory = opts.maxMemory;
+    this.suggestionCount = opts.suggestionCount;
+    this.minChars = opts.minChars;
+    this.bucketLimit = opts.bucketLimit;
+  }
+
+  static defaultOpts() {
+    return {
+      redis: "redis://127.0.0.1:6379/0",
+      maxMemory: 500,
+      suggestionCount: 5,
+      minChars: 3,
+      bucketLimit: 300
+    };
+  }
+
+  static parseOpts() {
+    let opts = {};
 
     try {
-      result = await cb();
-    } catch(e) {
-      console.log(e);
-    }
+      opts = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    } catch(e) {}
 
-    this.client.quit();
-    return result;
+    return { ...this.defaultOpts(), ...opts };
+  }
+
+  async invoke(cb) {
+    this.client = redis.createClient(this.redis);
+    return cb().then(this.client.quit());
+  }
+
+  extractPrefixes(completion) {
+    completion = completion.toLowerCase();
+
+    const start = this.minChars;
+    const prefixes = [];
+    for (let i = start; i <= completion.length; i++) {
+      prefixes.push(completion.slice(0, i));
+    }
+    return prefixes;
   }
 
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    // const translator = new Translator(this);
     const writer = new Writer(this);
 
     const promise = new Promise((resolve, reject) => {
@@ -71,7 +101,7 @@ class Prefixy {
   commandsToAddCompletion(item) {
     const completion = item.completion || item;
     const score = item.score || 0;
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
 
     let commands = [];
     prefixes.forEach(prefix =>
@@ -86,7 +116,7 @@ class Prefixy {
 
     const commands = [];
     completions.forEach(completion => {
-      const prefixes = extractPrefixes(completion);
+      const prefixes = this.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
         commands.push(["zrem", prefix, completion])
@@ -97,7 +127,7 @@ class Prefixy {
   }
 
   search(prefixQuery, opts={}) {
-    const defaultOpts = { limit: 0, withScores: false };
+    const defaultOpts = { limit: this.suggestionCount, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
@@ -109,7 +139,7 @@ class Prefixy {
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
   fixedIncrementScore(completion) {
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zadd', prefix, 'XX', 'INCR', -1, completion]
     );
@@ -119,13 +149,12 @@ class Prefixy {
 
   // similar to fixedIncrementScore, but will add completion
   // to bucket if not present
-
   dynamicIncrementScore(completion, limit) {
     if (limit >= 0) {
       return this.dynamicBucketIncrementScore(completion, limit);
     }
 
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
     );
@@ -134,7 +163,7 @@ class Prefixy {
   }
 
   async dynamicBucketIncrementScore(completion, limit) {
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = [];
     let count;
     let last;
@@ -155,7 +184,179 @@ class Prefixy {
 
     return this.client.batch(commands).execAsync();
   }
+
+  async importInsert(completion) {
+    const prefixes = this.extractPrefixes(completion);
+
+    for (let i = 0; i < prefixes.length; i++) {
+      let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count < this.bucketLimit) {
+        await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
+      }
+    }
+  }
+
+  // Disk Persistence Methods
+
+  async loadPrefixFromDisk(prefix) {
+    // If we need to clear out the completions for a given prefix:
+    // await this.client.zremrangebyrank(prefix, 0, -1);
+
+    const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
+    const commands = [];
+
+    if (!fs.existsSync(targetPath)) {
+      return Promise.resolve("");
+    }
+
+    const json = fs.readFileSync(targetPath, 'utf8');
+    const data = JSON.parse(json);
+
+    for (var i = 0; i < data.length; i += 2) {
+      commands.push(['zadd', prefix, data[i + 1], data[i]]);
+    }
+
+    return this.client.batch(commands).execAsync();
+  }
+
+  async persistPrefix(prefix) {
+    const writeFile = bluebird.promisify(fs.writeFile);
+    const unlink = bluebird.promisify(fs.unlink);
+    const completions = await this.client.zrangeAsync(prefix, 0, -1, 'WITHSCORES');
+    const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
+    const data = JSON.stringify(completions);
+
+    if (completions.length === 0 && fs.existsSync(targetPath)) {
+
+      return unlink(targetPath).then((err) => {
+        if (err) { return console.log(err); }
+
+        console.log(`${prefix} unlinked`);
+      });
+
+    } else if (completions.length === 0) {
+
+      return Promise.resolve("");
+
+    } else {
+
+      return writeFile(targetPath, data, 'utf8').then((err) => {
+        if (err) { return console.log(err); }
+
+        console.log(`${prefix} saved`);
+      });
+
+    }
+  }
+
+  async persistPrefixes(prefixes) {
+    for (var i = 0; i < prefixes.length; i++) {
+      await this.persistPrefix(prefixes[i]);
+    }
+  }
+
+  async persistInsertCompletions(array) {
+    validateInputIsArray(array, "insertCompletions");
+
+    let allPrefixes = [];
+    const commands = [];
+    array.forEach(item => {
+      const completion = item.completion || item;
+      const score = item.score || 0;
+      const prefixes = this.extractPrefixes(completion);
+      allPrefixes = [...allPrefixes, ...prefixes];
+
+      prefixes.forEach(prefix =>
+        commands.push(['zadd', prefix, -score, completion])
+      );
+    });
+
+    return this.client.batch(commands).execAsync().then(async () => {
+      await this.persistPrefixes(allPrefixes);
+      return "persist success";
+    });
+  }
+
+  async persistDeleteCompletions(completions) {
+    validateInputIsArray(completions, "deleteCompletions");
+
+    let allPrefixes = [];
+    const commands = [];
+    completions.forEach(completion => {
+      const prefixes = this.extractPrefixes(completion);
+      allPrefixes = [...allPrefixes, ...prefixes];
+
+      prefixes.forEach(prefix =>
+        commands.push(["zrem", prefix, completion])
+      );
+    });
+
+    return this.client.batch(commands).execAsync().then(async () => {
+      await this.persistPrefixes(allPrefixes);
+      return "persist success";
+    });
+  }
+
+  async persistSearch(prefixQuery, opts={}) {
+    const defaultOpts = { limit: 0, withScores: false };
+    opts = { ...defaultOpts, ...opts }
+    const limit = opts.limit - 1;
+
+    let args = [prefixQuery.toLowerCase(), 0, limit];
+    if (opts.withScores) args = args.concat('WITHSCORES');
+
+    let result = await this.client.zrangeAsync(...args);
+
+    if (result.length === 0) {
+      await this.loadPrefixFromDisk(prefixQuery)
+      result = await this.client.zrangeAsync(...args);
+    }
+
+    return result;
+  }
+
+  async persistDynamicIncrementScore(completion) {
+    if (this.bucketLimit >= 0) {
+      return this.persistDynamicBucketIncrementScore(completion, this.bucketLimit);
+    }
+
+    const prefixes = this.extractPrefixes(completion);
+    const commands = prefixes.map(prefix =>
+      ['zincrby', prefix, -1, completion]
+    );
+
+    return this.client.batch(commands).execAsync().then(async () => {
+      await this.persistPrefixes(prefixes);
+      return "persist success";
+    });;
+  }
+
+  async persistDynamicBucketIncrementScore(completion) {
+    const prefixes = this.extractPrefixes(completion);
+    const commands = [];
+    const limit = this.bucketLimit;
+    let count;
+    let last;
+
+    for (var i = 0; i < prefixes.length; i++) {
+      count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count >= limit) {
+        last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
+        const newScore = last[1] - 1;
+        commands.push(['zremrangebyrank', prefixes[i], limit - 1, -1]);
+        commands.push(['zadd', prefixes[i], newScore, completion]);
+      } else {
+        commands.push(['zincrby', prefixes[i], -1, completion]);
+      }
+    }
+
+    return this.client.batch(commands).execAsync().then(async () => {
+      await this.persistPrefixes(prefixes);
+      return "persist success";
+    });
+  }
 }
 
 module.exports = new Prefixy();
-

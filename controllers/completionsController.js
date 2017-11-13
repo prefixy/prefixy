@@ -15,7 +15,7 @@ module.exports = {
   get: async function(req, res) {
     const prefix = req.query.prefix;
     const opts = {
-      limit: req.query.limit || 5,
+      limit: req.query.limit || Prefixy.suggestionCount,
       withScores: req.query.scores || false,
     };
     let completions;
