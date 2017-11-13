@@ -2,8 +2,8 @@ const redis = require("redis");
 const fs = require("fs");
 const path = require("path");
 const JSONStream = require("JSONStream");
-const { Translator, Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
-const { parseOpts, extractPrefixes } = require(path.resolve(__dirname, "prefixyHelpers/utils"));
+const { Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
+
 const bluebird = require("bluebird");
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -76,11 +76,10 @@ class Prefixy {
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    const translator = new Translator(this);
     const writer = new Writer(this);
 
     const promise = new Promise((resolve, reject) => {
-      json.pipe(parser).pipe(translator).pipe(writer);
+      json.pipe(parser).pipe(writer);
       writer.on("finish", () => resolve("Import finished"));
     });
     return promise;
@@ -92,17 +91,24 @@ class Prefixy {
     validateInputIsArray(array, "insertCompletions");
 
     const commands = [];
-    array.forEach(item => {
-      const completion = item.completion || item;
-      const score = item.score || 0;
-      const prefixes = this.extractPrefixes(completion);
-
-      prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, -score, completion])
-      );
-    });
+    array.forEach(item =>
+      commands.push(...this.commandsToAddCompletion(item))
+    );
 
     return this.client.batch(commands).execAsync();
+  }
+
+  commandsToAddCompletion(item) {
+    const completion = item.completion || item;
+    const score = item.score || 0;
+    const prefixes = this.extractPrefixes(completion);
+
+    let commands = [];
+    prefixes.forEach(prefix =>
+      commands.push(['zadd', prefix, -score, completion])
+    );
+
+    return commands;
   }
 
   deleteCompletions(completions) {
@@ -110,7 +116,7 @@ class Prefixy {
 
     const commands = [];
     completions.forEach(completion => {
-      const prefixes = extractPrefixes(completion);
+      const prefixes = this.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
         commands.push(["zrem", prefix, completion])
@@ -133,7 +139,7 @@ class Prefixy {
   // we increment by -1, bc this enables us to sort
   // by frequency plus ascending lexographical order in Redis
   fixedIncrementScore(completion) {
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zadd', prefix, 'XX', 'INCR', -1, completion]
     );
@@ -148,7 +154,7 @@ class Prefixy {
       return this.dynamicBucketIncrementScore(completion, limit);
     }
 
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
     );
@@ -157,7 +163,7 @@ class Prefixy {
   }
 
   async dynamicBucketIncrementScore(completion, limit) {
-    const prefixes = extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = [];
     let count;
     let last;
@@ -180,14 +186,12 @@ class Prefixy {
   }
 
   async importInsert(completion) {
-    const prefixes = extractPrefixes(completion);
-    // temporarily hard coded; change when we have as a config variable
-    const bucketLimit = 30;
+    const prefixes = this.extractPrefixes(completion);
 
     for (let i = 0; i < prefixes.length; i++) {
       let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
 
-      if (count < bucketLimit) {
+      if (count < this.bucketLimit) {
         await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
       }
     }
@@ -260,7 +264,7 @@ class Prefixy {
     array.forEach(item => {
       const completion = item.completion || item;
       const score = item.score || 0;
-      const prefixes = Prefixy.extractPrefixes(completion);
+      const prefixes = this.extractPrefixes(completion);
       allPrefixes = [...allPrefixes, ...prefixes];
 
       prefixes.forEach(prefix =>
@@ -280,7 +284,7 @@ class Prefixy {
     let allPrefixes = [];
     const commands = [];
     completions.forEach(completion => {
-      const prefixes = Prefixy.extractPrefixes(completion);
+      const prefixes = this.extractPrefixes(completion);
       allPrefixes = [...allPrefixes, ...prefixes];
 
       prefixes.forEach(prefix =>
@@ -312,12 +316,12 @@ class Prefixy {
     return result;
   }
 
-  async persistDynamicIncrementScore(completion, limit) {
-    if (limit >= 0) {
-      return this.persistDynamicBucketIncrementScore(completion, limit);
+  async persistDynamicIncrementScore(completion) {
+    if (this.bucketLimit >= 0) {
+      return this.persistDynamicBucketIncrementScore(completion, this.bucketLimit);
     }
 
-    const prefixes = Prefixy.extractPrefixes(completion);
+    const prefixes = this.extractPrefixes(completion);
     const commands = prefixes.map(prefix =>
       ['zincrby', prefix, -1, completion]
     );
@@ -328,9 +332,10 @@ class Prefixy {
     });;
   }
 
-  async persistDynamicBucketIncrementScore(completion, limit) {
-    const prefixes = Prefixy.extractPrefixes(completion);
+  async persistDynamicBucketIncrementScore(completion) {
+    const prefixes = this.extractPrefixes(completion);
     const commands = [];
+    const limit = this.bucketLimit;
     let count;
     let last;
 

@@ -6,13 +6,13 @@ describe("Prefixy", () => {
   describe("extractPrefixes", () => {
     it("returns an array of prefixes for a completion", () => {
       expect(
-        Prefixy.extractPrefixes("waldo")
+        this.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
     });
 
     it("extracts the lower case prefixes of a completion", () => {
       expect(
-        Prefixy.extractPrefixes("Mr. Mime")
+        this.extractPrefixes("Mr. Mime")
       ).toEqual(["m", "mr", "mr.", "mr. ", "mr. m",
                  "mr. mi", "mr. mim", "mr. mime"]);
     });
