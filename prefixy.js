@@ -185,9 +185,7 @@ class Prefixy {
     return this.client.batch(commands).execAsync();
   }
 
-  async importInsert(completion) {
-    const prefixes = this.extractPrefixes(completion);
-
+  async insertCompletion(prefixes, completion) {
     for (let i = 0; i < prefixes.length; i++) {
       let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
 
@@ -260,22 +258,17 @@ class Prefixy {
     validateInputIsArray(array, "insertCompletions");
 
     let allPrefixes = [];
-    const commands = [];
-    array.forEach(item => {
-      const completion = item.completion || item;
-      const score = item.score || 0;
+
+    array.forEach(completion => {
       const prefixes = this.extractPrefixes(completion);
+
       allPrefixes = [...allPrefixes, ...prefixes];
 
-      prefixes.forEach(prefix =>
-        commands.push(['zadd', prefix, -score, completion])
-      );
+      await insertCompletion(prefixes, completion);
     });
 
-    return this.client.batch(commands).execAsync().then(async () => {
-      await this.persistPrefixes(allPrefixes);
-      return "persist success";
-    });
+    await this.persistPrefixes(allPrefixes);
+    return "persist success";
   }
 
   async persistDeleteCompletions(completions) {

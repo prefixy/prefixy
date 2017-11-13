@@ -23,7 +23,7 @@ describe("putIncrementEndpoint", () => {
     });
 
     afterEach(() => {
-      // Prefixy.client.flushdb();
+      Prefixy.client.flushdb();
     });
 
     it("returns a 204 No Content", async () => {
