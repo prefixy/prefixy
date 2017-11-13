@@ -6,13 +6,13 @@ describe("Prefixy", () => {
   describe("extractPrefixes", () => {
     it("returns an array of prefixes for a completion", () => {
       expect(
-        Prefixy.constructor.extractPrefixes("waldo")
+        Prefixy.extractPrefixes("waldo")
       ).toEqual(["w", "wa", "wal", "wald", "waldo"]);
     });
 
     it("extracts the lower case prefixes of a completion", () => {
       expect(
-        Prefixy.constructor.extractPrefixes("Mr. Mime")
+        Prefixy.extractPrefixes("Mr. Mime")
       ).toEqual(["m", "mr", "mr.", "mr. ", "mr. m",
                  "mr. mi", "mr. mim", "mr. mime"]);
     });
@@ -87,7 +87,7 @@ describe("Prefixy", () => {
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("wo", 0, -1);
+      ).toHaveBeenCalledWith("wo", 0, Prefixy.suggestionCount - 1);
     });
 
     it("calls zrangeAsync with the options provided to search", () => {
@@ -103,7 +103,7 @@ describe("Prefixy", () => {
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("mew two", 0, -1);
+      ).toHaveBeenCalledWith("mew two", 0, Prefixy.suggestionCount - 1);
     });
   });
 });

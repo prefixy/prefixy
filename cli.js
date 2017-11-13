@@ -90,7 +90,7 @@ program
 
 program
   .command('suggestions <prefixQuery>')
-  .option('-l, --limit <limit>', 'add a limit', '5')
+  .option('-l, --limit <limit>', 'add a limit', Prefixy.suggestionCount)
   .option('-s, --with-scores')
   .action(async (prefixQuery, command) => {
     const withScores = command.withScores;

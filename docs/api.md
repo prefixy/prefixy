@@ -1,11 +1,12 @@
-- [0. API Documentation](#0-api-documentation)
-  - [1. GET /completions](#1-get-completions)
-  - [2. POST /completions](#2-post-completions)
-  - [3. DELETE /completions](#3-delete-completions)
-  - [4. PUT /increment](#5-put-increment)
-  - [5. PUT /dynamic-increment](#6-put-dynamic-increment)
-
 # API Documentation
+
+## List of Endpoints:
+
+  1. [`GET /completions`](#1-get-completions)
+  2. [`POST /completions`](#2-post-completions)
+  3. [`DELETE /completions`](#3-delete-completions)
+  4. [`PUT /increment`](#4-put-increment)
+  5. [`PUT /dynamic-increment`](#5-put-dynamic-increment)
 
 ## Example Error Responses:
 
@@ -23,7 +24,7 @@ All endpoints will return errors in the following format:
 }
 ```
 
-## 1. GET /completions
+## 1. `GET /completions`
 
 This endpoint can be used to get a list
 of top possible completions for a given prefix.
@@ -77,7 +78,7 @@ The response status code is 200 OK.
 ]
 ```
 
-## 2. POST /completions
+## 2. `POST /completions`
 
 This endpoint can be used to load
 new completions into your index. It can also be used
@@ -151,7 +152,7 @@ queue address will return a 201 with payload once finished
 
 The response status code is 204 No Content.
 
-## 3. DELETE /completions
+## 3. `DELETE /completions`
 
 This endpoint can be used to delete
 existing completions in the index.
@@ -183,7 +184,7 @@ strings.
 
 The response status code is 204 No Content.
 
-## 4. PUT /increment
+## 4. `PUT /increment`
 
 This endpoint can be used to increment
 an existing completion's score by 1. Nothing will occur
@@ -208,7 +209,7 @@ attribute.
 
 The response status code is 204 No Content.
 
-## 5. PUT /dynamic-increment
+## 5. `PUT /dynamic-increment`
 
 This endpoint can be used to increment
 an existing completion's score by 1. If the completion

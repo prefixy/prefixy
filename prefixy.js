@@ -1,15 +1,15 @@
 const redis = require("redis");
-// TODO: make createClient its own method, in order
-// to pass in custom config options
 const fs = require("fs");
 const path = require("path");
 const JSONStream = require("JSONStream");
 const { Translator, Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
-const { extractPrefixes } = require(path.resolve(__dirname, "prefixyHelpers/utils"));
+const { parseOpts, extractPrefixes } = require(path.resolve(__dirname, "prefixyHelpers/utils"));
 const bluebird = require("bluebird");
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
+
+const CONFIG_FILE = path.resolve(__dirname, "prefixy-config.json");
 
 // later: configuration option - include full string
 
@@ -27,27 +27,57 @@ const validateInputIsArray = (input, funcName) => {
 };
 
 class Prefixy {
-  constructor() {}
+  constructor() {
+    const opts = Prefixy.parseOpts();
 
-  async invoke(cb) {
-    this.client = redis.createClient();
-    let result;
+    this.redis = opts.redis;
+    this.maxMemory = opts.maxMemory;
+    this.suggestionCount = opts.suggestionCount;
+    this.minChars = opts.minChars;
+    this.bucketLimit = opts.bucketLimit;
+  }
+
+  static defaultOpts() {
+    return {
+      redis: "redis://127.0.0.1:6379/0",
+      maxMemory: 500,
+      suggestionCount: 5,
+      minChars: 3,
+      bucketLimit: 300
+    };
+  }
+
+  static parseOpts() {
+    let opts = {};
 
     try {
-      result = await cb();
-    } catch(e) {
-      console.log(e);
-    }
+      opts = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    } catch(e) {}
 
-    this.client.quit();
-    return result;
+    return { ...this.defaultOpts(), ...opts };
+  }
+
+  async invoke(cb) {
+    this.client = redis.createClient(this.redis);
+    return cb().then(this.client.quit());
+  }
+
+  extractPrefixes(completion) {
+    completion = completion.toLowerCase();
+
+    const start = this.minChars;
+    const prefixes = [];
+    for (let i = start; i <= completion.length; i++) {
+      prefixes.push(completion.slice(0, i));
+    }
+    return prefixes;
   }
 
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    const translator = new Translator();
-    const writer = new Writer(this.client);
+    const translator = new Translator(this);
+    const writer = new Writer(this);
 
     const promise = new Promise((resolve, reject) => {
       json.pipe(parser).pipe(translator).pipe(writer);
@@ -65,7 +95,7 @@ class Prefixy {
     array.forEach(item => {
       const completion = item.completion || item;
       const score = item.score || 0;
-      const prefixes = extractPrefixes(completion);
+      const prefixes = this.extractPrefixes(completion);
 
       prefixes.forEach(prefix =>
         commands.push(['zadd', prefix, -score, completion])
@@ -91,7 +121,7 @@ class Prefixy {
   }
 
   search(prefixQuery, opts={}) {
-    const defaultOpts = { limit: 0, withScores: false };
+    const defaultOpts = { limit: this.suggestionCount, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
@@ -325,4 +355,3 @@ class Prefixy {
 }
 
 module.exports = new Prefixy();
-
