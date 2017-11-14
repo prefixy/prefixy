@@ -90,19 +90,6 @@ class Prefixy {
     return promise;
   }
 
-  commandsToAddCompletion(item) {
-    const completion = item.completion || item;
-    const score = item.score || 0;
-    const prefixes = this.extractPrefixes(completion);
-
-    let commands = [];
-    prefixes.forEach(prefix =>
-      commands.push(['zadd', prefix, -score, completion])
-    );
-
-    return commands;
-  }
-
   async loadPrefix(prefix) {
     // If we need to clear out the completions for a given prefix:
     // await this.client.zremrangebyrank(prefix, 0, -1);
