@@ -89,19 +89,6 @@ class Prefixy {
     return promise;
   }
 
-  // takes an array of strings or an array of completions with scores
-  // e.g. [{ completion: "string", score: 13 }]
-  insertCompletions(array) {
-    validateInputIsArray(array, "insertCompletions");
-
-    const commands = [];
-    array.forEach(item =>
-      commands.push(...this.commandsToAddCompletion(item))
-    );
-
-    return this.client.batch(commands).execAsync();
-  }
-
   commandsToAddCompletion(item) {
     const completion = item.completion || item;
     const score = item.score || 0;
@@ -115,93 +102,7 @@ class Prefixy {
     return commands;
   }
 
-  deleteCompletions(completions) {
-    validateInputIsArray(completions, "deleteCompletions");
-
-    const commands = [];
-    completions.forEach(completion => {
-      const prefixes = this.extractPrefixes(completion);
-
-      prefixes.forEach(prefix =>
-        commands.push(["zrem", prefix, completion])
-      );
-    });
-
-    return this.client.batch(commands).execAsync();
-  }
-
-  search(prefixQuery, opts={}) {
-    const defaultOpts = { limit: this.suggestionCount, withScores: false };
-    opts = { ...defaultOpts, ...opts }
-    const limit = opts.limit - 1;
-
-    let args = [prefixQuery.toLowerCase(), 0, limit];
-    if (opts.withScores) args = args.concat('WITHSCORES');
-    return this.client.zrangeAsync(...args);
-  }
-
-  // we increment by -1, bc this enables us to sort
-  // by frequency plus ascending lexographical order in Redis
-  fixedIncrementScore(completion) {
-    const prefixes = this.extractPrefixes(completion);
-    const commands = prefixes.map(prefix =>
-      ['zadd', prefix, 'XX', 'INCR', -1, completion]
-    );
-
-    return this.client.batch(commands).execAsync();
-  }
-
-  // similar to fixedIncrementScore, but will add completion
-  // to bucket if not present
-  dynamicIncrementScore(completion, limit) {
-    if (limit >= 0) {
-      return this.dynamicBucketIncrementScore(completion, limit);
-    }
-
-    const prefixes = this.extractPrefixes(completion);
-    const commands = prefixes.map(prefix =>
-      ['zincrby', prefix, -1, completion]
-    );
-
-    return this.client.batch(commands).execAsync();
-  }
-
-  async dynamicBucketIncrementScore(completion, limit) {
-    const prefixes = this.extractPrefixes(completion);
-    const commands = [];
-    let count;
-    let last;
-
-    for (var i = 0; i < prefixes.length; i++) {
-      count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
-      let newScore;
-
-      if (count >= limit) {
-        last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
-        newScore = last[1] - 1;
-        commands.push(['zremrangebyrank', prefixes[i], limit - 1, -1]);
-        commands.push(['zadd', prefixes[i], newScore, completion]);
-      } else {
-        commands.push(['zincrby', prefixes[i], -1, completion]);
-      }
-    }
-
-    return this.client.batch(commands).execAsync();
-  }
-
-  async insertCompletion(prefixes, completion) {
-    for (let i = 0; i < prefixes.length; i++) {
-      let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
-
-      if (count < this.bucketLimit) {
-        await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
-      }
-    }
-  }
-
-  // Disk Persistence Methods
-
-  async loadPrefixFromDisk(prefix) {
+  async loadPrefix(prefix) {
     // If we need to clear out the completions for a given prefix:
     // await this.client.zremrangebyrank(prefix, 0, -1);
 
@@ -258,7 +159,17 @@ class Prefixy {
     }
   }
 
-  async persistInsertCompletions(array) {
+  async insertCompletion(prefixes, completion) {
+    for (let i = 0; i < prefixes.length; i++) {
+      let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count < this.bucketLimit) {
+        await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
+      }
+    }
+  }
+
+  async insertCompletions(array) {
     validateInputIsArray(array, "insertCompletions");
 
     let allPrefixes = [];
@@ -274,7 +185,7 @@ class Prefixy {
     return this.persistPrefixes(allPrefixes);
   }
 
-  async persistDeleteCompletions(completions) {
+  async deleteCompletions(completions) {
     validateInputIsArray(completions, "deleteCompletions");
 
     let allPrefixes = [];
@@ -294,7 +205,7 @@ class Prefixy {
     });
   }
 
-  async persistSearch(prefixQuery, opts={}) {
+  async search(prefixQuery, opts={}) {
     const defaultOpts = { limit: 0, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
@@ -305,30 +216,14 @@ class Prefixy {
     let result = await this.client.zrangeAsync(...args);
 
     if (result.length === 0) {
-      await this.loadPrefixFromDisk(prefixQuery)
+      await this.loadPrefix(prefixQuery)
       result = await this.client.zrangeAsync(...args);
     }
 
     return result;
   }
 
-  async persistDynamicIncrementScore(completion) {
-    if (this.bucketLimit >= 0) {
-      return this.persistDynamicBucketIncrementScore(completion, this.bucketLimit);
-    }
-
-    const prefixes = this.extractPrefixes(completion);
-    const commands = prefixes.map(prefix =>
-      ['zincrby', prefix, -1, completion]
-    );
-
-    return this.client.batch(commands).execAsync().then(async () => {
-      await this.persistPrefixes(prefixes);
-      return "persist success";
-    });;
-  }
-
-  async persistDynamicBucketIncrementScore(completion) {
+  async increment(completion) {
     const prefixes = this.extractPrefixes(completion);
     const commands = [];
     const limit = this.bucketLimit;
