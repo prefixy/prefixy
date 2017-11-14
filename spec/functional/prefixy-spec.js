@@ -3,9 +3,12 @@ const bluebird = require("bluebird");
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
+const fs = require("fs");
 const path = require("path");
 const Prefixy = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
+
 Prefixy.client = redis.createClient({ db: 1, prefix: "test:" });
+Prefixy.dataPath = 'spec/data';
 
 describe("Prefixy works with redis", () => {
 
@@ -13,9 +16,10 @@ describe("Prefixy works with redis", () => {
     Prefixy.client.flushdb();
   });
 
-  describe("inserting completions without scores", () => {
+  describe("inserting completions", () => {
     it("adds completion to all of its prefixes", async () => {
-      await Prefixy.insertCompletions(["charizard"]);
+      const completions = ["charizard"];
+      await Prefixy.insertCompletions(completions);
       const prefix1 = await Prefixy.search("c");
       const prefix2 = await Prefixy.search("char");
       const prefix3 = await Prefixy.search("charizard");
@@ -23,10 +27,13 @@ describe("Prefixy works with redis", () => {
       expect(prefix1).toContain("charizard");
       expect(prefix2).toContain("charizard");
       expect(prefix3).toContain("charizard");
+
+      await Prefixy.deleteCompletions(completions);
     });
 
     it("can add a group of completions", async () => {
-      await Prefixy.insertCompletions(["parasect", "jigglypuff", "paras"]);
+      const completions = ["parasect", "jigglypuff", "paras"];
+      await Prefixy.insertCompletions(completions);
       const prefixP      = await Prefixy.search("p");
       const prefixPa     = await Prefixy.search("pa");
       const prefixJ      = await Prefixy.search("j");
@@ -40,9 +47,11 @@ describe("Prefixy works with redis", () => {
       expect(prefixJiggly).toEqual(["jigglypuff"]);
       expect(prefixParas).toEqual(["paras", "parasect"]);
       expect(prefixParase).toEqual(["parasect"]);
+
+      await Prefixy.deleteCompletions(completions);
     });
 
-    it("can add strings containing special characters", async () => {
+    xit("can add strings containing special characters", async () => {
       await Prefixy.insertCompletions(["!@#$!@!#  !#@!/\\"]);
       const prefix1 = await Prefixy.search("!@");
       const prefix2 = await Prefixy.search("!@#$!@!#  ");
@@ -56,50 +65,6 @@ describe("Prefixy works with redis", () => {
     });
   });
 
-  describe("inserting completions with scores", () => {
-    it("adds completion with its score to all of its prefixes", async () => {
-      await Prefixy.insertCompletions([{ completion: "wigglytuff", score: 20 }]);
-
-      const prefix1 = await Prefixy.search("wi", { withScores: true });
-      const prefix2 = await Prefixy.search("wiggly", { withScores: true });
-      const prefix3 = await Prefixy.search("wigglytuff", { withScores: true });
-
-      expect(prefix1).toEqual(['wigglytuff', '-20']);
-      expect(prefix2).toEqual(['wigglytuff', '-20']);
-      expect(prefix3).toEqual(['wigglytuff', '-20']);
-    });
-
-    it("can add group of completions with scores", async () => {
-      await Prefixy.insertCompletions(
-        [
-          { completion: "eevee", score: 10 },
-          { completion: "exeggcute", score: 50 },
-          { completion: "igglybuff", score: 5 },
-        ]
-      );
-
-      const prefix1 = await Prefixy.search("e", { withScores: true });
-      const prefix2 = await Prefixy.search("ex", { withScores: true });
-      const prefix3 = await Prefixy.search("igg", { withScores: true });
-
-      expect(prefix1).toEqual(['exeggcute', '-50', 'eevee', '-10']);
-      expect(prefix2).toEqual(['exeggcute', '-50']);
-      expect(prefix3).toEqual(['igglybuff', '-5']);
-    });
-
-    it("items inserted with same score are returned lexicographically", async () => {
-      await Prefixy.insertCompletions(
-        [
-          { completion: "exeggcute", score: 10 },
-          { completion: "eevee", score: 10 },
-        ]
-      );
-      const prefix1 = await Prefixy.search("e");
-
-      expect(prefix1).toEqual(['eevee', 'exeggcute']);
-    });
-  });
-
   describe("deleteCompletions", () => {
     it("removes completions from each of their prefixes", async () => {
       await Prefixy.insertCompletions(["geodude", "ghastly", "graveler"]);
@@ -107,16 +72,8 @@ describe("Prefixy works with redis", () => {
       const results = await Prefixy.search("g");
 
       expect(results).toEqual(["ghastly"]);
-    });
-  });
 
-  describe("fixedIncrementScore", () => {
-    it("increments a completion's score by 1", async () => {
-      await Prefixy.insertCompletions(["jynx"]);
-      await Prefixy.fixedIncrementScore("jynx");
-      const result = await Prefixy.search("jynx", { withScores: true });
-
-      expect(result).toEqual(["jynx", "-1"]);
+      Prefixy.deleteCompletions(["ghastly"]);
     });
   });
 });
