@@ -163,6 +163,10 @@ class Prefixy {
     for (let i = 0; i < prefixes.length; i++) {
       let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
 
+      if (count === 0) {
+        await this.loadPrefix(prefixes[i]);
+      }
+
       if (count < this.bucketLimit) {
         await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
       }
@@ -232,6 +236,10 @@ class Prefixy {
 
     for (var i = 0; i < prefixes.length; i++) {
       count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count === 0) {
+        await this.loadPrefix(prefixes[i]);
+      }
 
       if (count >= limit) {
         last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
