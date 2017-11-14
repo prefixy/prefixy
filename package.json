@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "nodemon ./bin/www",
+    "start": "nodemon ./bin/www --ignore data/",
     "seed": "node seed.js",
     "test": "jasmine",
     "cli": "node cli.js"

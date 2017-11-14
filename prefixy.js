@@ -132,25 +132,15 @@ class Prefixy {
     const data = JSON.stringify(completions);
 
     if (completions.length === 0 && fs.existsSync(targetPath)) {
-
       return unlink(targetPath).then((err) => {
         if (err) { return console.log(err); }
-
-        console.log(`${prefix} unlinked`);
       });
-
     } else if (completions.length === 0) {
-
-      return Promise.resolve("");
-
+      return Promise.resolve();
     } else {
-
       return writeFile(targetPath, data, 'utf8').then((err) => {
         if (err) { return console.log(err); }
-
-        console.log(`${prefix} saved`);
       });
-
     }
   }
 
