@@ -26,7 +26,7 @@ describe("putIncrementEndpoint", () => {
       Prefixy.client.flushdb();
     });
 
-    it("returns a 204 No Content", async () => {
+    xit("returns a 204 No Content", async () => {
       const res = await axios.put("/increment", reqBody);
       expect(res.status).toBe(204);
     });

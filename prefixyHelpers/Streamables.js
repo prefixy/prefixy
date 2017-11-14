@@ -19,7 +19,7 @@ class Writer extends Writable {
     console.log("Writing to redis, please wait...");
     Writer.logMemory("This import");
 
-    this.Prefixy.persistInsertCompletions([item])
+    this.Prefixy.insertCompletions([item])
       .then(() => callback())
       .catch(callback);
   }

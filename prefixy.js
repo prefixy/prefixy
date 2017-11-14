@@ -35,6 +35,7 @@ class Prefixy {
     this.suggestionCount = opts.suggestionCount;
     this.minChars = opts.minChars;
     this.bucketLimit = opts.bucketLimit;
+    this.dataPath = 'data';
   }
 
   static defaultOpts() {
@@ -127,7 +128,7 @@ class Prefixy {
     const writeFile = bluebird.promisify(fs.writeFile);
     const unlink = bluebird.promisify(fs.unlink);
     const completions = await this.client.zrangeAsync(prefix, 0, -1, 'WITHSCORES');
-    const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
+    const targetPath = path.resolve(__dirname, `${this.dataPath}/${prefix}.json`);
     const data = JSON.stringify(completions);
 
     if (completions.length === 0 && fs.existsSync(targetPath)) {
@@ -162,6 +163,10 @@ class Prefixy {
   async insertCompletion(prefixes, completion) {
     for (let i = 0; i < prefixes.length; i++) {
       let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count === 0) {
+        await this.loadPrefix(prefixes[i]);
+      }
 
       if (count < this.bucketLimit) {
         await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
@@ -206,7 +211,7 @@ class Prefixy {
   }
 
   async search(prefixQuery, opts={}) {
-    const defaultOpts = { limit: 0, withScores: false };
+    const defaultOpts = { limit: this.suggestionCount, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
@@ -232,6 +237,10 @@ class Prefixy {
 
     for (var i = 0; i < prefixes.length; i++) {
       count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+
+      if (count === 0) {
+        await this.loadPrefix(prefixes[i]);
+      }
 
       if (count >= limit) {
         last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');

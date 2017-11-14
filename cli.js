@@ -29,13 +29,9 @@ program
 
 program
   .command('insert <completion>')
-  .option('-s, --with-score <score>', 'add a score', '0')
-  .action(async (completion, command) => {
-    const score = command.withScore;
-    const arg = [{ completion, score }];
-
+  .action(async (completion) => {
     try {
-      await Prefixy.invoke(() => Prefixy.insertCompletions(arg));
+      await Prefixy.invoke(() => Prefixy.insertCompletions([completion]));
     } catch(e) {
       console.log(e);
     }
@@ -45,17 +41,7 @@ program
   .command('increment <completion>')
   .action(async completion => {
     try {
-      await Prefixy.invoke(() => Prefixy.fixedIncrementScore(completion));
-    } catch(e) {
-      console.log(e);
-    }
-  });
-
-program
-  .command('dynamicIncrement <completion> [limit]')
-  .action(async (completion, limit) => {
-    try {
-      await Prefixy.invoke(() => Prefixy.dynamicIncrementScore(completion, limit));
+      await Prefixy.invoke(() => Prefixy.increment(completion));
     } catch(e) {
       console.log(e);
     }
@@ -63,23 +49,6 @@ program
 
 program
   .command('search <prefixQuery>')
-  .option('-s, --with-scores')
-  .action(async (prefixQuery, command) => {
-    const withScores = command.withScores;
-    const args = [prefixQuery, { withScores }];
-    let result;
-
-    try {
-      result = await Prefixy.invoke(() => Prefixy.search(...args));
-    } catch(e) {
-      console.log(e);
-    }
-
-    console.log(result);
-  });
-
-program
-  .command('suggestions <prefixQuery>')
   .option('-l, --limit <limit>', 'add a limit', Prefixy.suggestionCount)
   .option('-s, --with-scores')
   .action(async (prefixQuery, command) => {
@@ -108,7 +77,7 @@ program
   });
 
 program
-  .command('persistPrefix <prefix>')
+  .command('persist <prefix>')
   .action(async prefix => {
     try {
       await Prefixy.invoke(() => Prefixy.persistPrefix(prefix));
@@ -118,60 +87,14 @@ program
   });
 
 program
-  .command('loadPrefix <prefix>')
+  .command('load <prefix>')
   .action(async prefix => {
     try {
-      await Prefixy.invoke(() => Prefixy.loadPrefixFromDisk(prefix));
+      await Prefixy.invoke(() => Prefixy.loadPrefix(prefix));
     } catch(e) {
       console.log(e);
     }
   });
 
-program
-  .command('persistInsert <completion>')
-  .action(async completion => {
-    try {
-      await Prefixy.invoke(() => Prefixy.persistInsertCompletions([completion]));
-    } catch(e) {
-      console.log(e);
-    }
-  });
-
-program
-  .command('persistDelete <completion>')
-  .action(async completion => {
-    try {
-      await Prefixy.invoke(() => Prefixy.persistDeleteCompletions([completion]));
-    } catch(e) {
-      console.log(e);
-    }
-  });
-
-program
-  .command('persistSearch <prefixQuery>')
-  .option('-s, --with-scores')
-  .action(async (prefixQuery, command) => {
-    const withScores = command.withScores;
-    const args = [prefixQuery, { withScores }];
-    let result;
-
-    try {
-      result = await Prefixy.invoke(() => Prefixy.persistSearch(...args));
-    } catch(e) {
-      console.log(e);
-    }
-
-    console.log(result);
-  });
-
-program
-  .command('persistDynamicIncrement <completion> [limit]')
-  .action(async (completion, limit) => {
-    try {
-      await Prefixy.invoke(() => Prefixy.persistDynamicIncrementScore(completion, limit));
-    } catch(e) {
-      console.log(e);
-    }
-  });
 
 program.parse(process.argv);
