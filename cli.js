@@ -42,16 +42,6 @@ program
   });
 
 program
-  .command('setscore <completion> <score>')
-  .action(async (completion, score) => {
-    try {
-      await Prefixy.invoke(() => Prefixy.insertCompletions([{ completion, score }]));
-    } catch(e) {
-      console.log(e);
-    }
-  });
-
-program
   .command('increment <completion>')
   .action(async completion => {
     try {
@@ -139,13 +129,9 @@ program
 
 program
   .command('persistInsert <completion>')
-  .option('-s, --with-score <score>', 'add a score', '0')
-  .action(async (completion, command) => {
-    const score = command.withScore;
-    const arg = [{ completion, score }];
-
+  .action(async completion => {
     try {
-      await Prefixy.invoke(() => Prefixy.persistInsertCompletions(arg));
+      await Prefixy.invoke(() => Prefixy.persistInsertCompletions([completion]));
     } catch(e) {
       console.log(e);
     }

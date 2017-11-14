@@ -42,8 +42,8 @@ class Prefixy {
       redis: "redis://127.0.0.1:6379/0",
       maxMemory: 500,
       suggestionCount: 5,
-      minChars: 3,
-      bucketLimit: 300
+      minChars: 1,
+      bucketLimit: 50
     };
   }
 
@@ -59,7 +59,7 @@ class Prefixy {
 
   async invoke(cb) {
     this.client = redis.createClient(this.redis);
-    return cb().then(this.client.quit());
+    return cb().then(() => this.client.quit());
   }
 
   extractPrefixes(completion) {
@@ -259,16 +259,15 @@ class Prefixy {
 
     let allPrefixes = [];
 
-    array.forEach(completion => {
+    for (let i = 0; i < array.length; i++) {
+      let completion = array[i];
       const prefixes = this.extractPrefixes(completion);
 
       allPrefixes = [...allPrefixes, ...prefixes];
+      await this.insertCompletion(prefixes, completion);
+    }
 
-      await insertCompletion(prefixes, completion);
-    });
-
-    await this.persistPrefixes(allPrefixes);
-    return "persist success";
+    return this.persistPrefixes(allPrefixes);
   }
 
   async persistDeleteCompletions(completions) {

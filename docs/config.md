@@ -46,7 +46,7 @@ In `prefixy-config.json`:
   "redis": "redis://:p4ssw0rd@10.0.1.1:6380/15",
   "maxMemory": 250,
   "bucketLimit": 100,
-  "minChars": 1,
+  "minChars": 3,
   "suggestionCount": 10
 }
 ```
@@ -76,7 +76,7 @@ In `prefixy-config.json`:
 #### `"minChars"`
  - Prefixy will only store prefixes with the
  specified amount of minimum characters. The
- default value of `"minChars"` is `3`.
+ default value of `"minChars"` is `1`.
  - This is recommended as a space-saving measure, since
  you usually don't need to show suggestions until a miminum
  amount of characters has been typed by the user.
@@ -84,7 +84,7 @@ In `prefixy-config.json`:
 #### `"bucketLimit"`
  - How many completions should Prefixy store for
  a given prefix? The default `"bucketLimit"` is a
- very conservative `300`, but we recommend setting
+ very conservative `50`, but we recommend setting
  this to an even smaller number to save space.
  - At the end of day, we only need to show the top
  5 or 10 suggestions to the user. And we can still
