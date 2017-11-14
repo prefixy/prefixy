@@ -59,7 +59,11 @@ class Prefixy {
 
   async invoke(cb) {
     this.client = redis.createClient(this.redis);
-    return cb().then(() => this.client.quit());
+    return cb()
+      .then((result) => {
+        this.client.quit();
+        return result;
+      });
   }
 
   extractPrefixes(completion) {
