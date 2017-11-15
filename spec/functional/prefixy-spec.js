@@ -8,7 +8,7 @@ const path = require("path");
 const Prefixy = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
 
 Prefixy.client = redis.createClient({ db: 1, prefix: "test:" });
-Prefixy.dataPath = 'spec/data';
+Prefixy.mongoUrl = "mongodb://localhost:27017/test";
 
 describe("Prefixy works with redis", () => {
 

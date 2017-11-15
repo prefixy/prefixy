@@ -1,7 +1,7 @@
-function PrefixyComplete(input, completionsUrl, incrementUrl) {
+function PrefixyComplete(input, prefixyUrl) {
   this.input = input;
-  this.completionsUrl = completionsUrl
-  this.incrementUrl = incrementUrl;
+  this.completionsUrl = prefixyUrl + '/completions';
+  this.incrementUrl = prefixyUrl + '/increment';
 
   this.listUI = null;
   this.overlay = null;
