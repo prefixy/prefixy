@@ -6,12 +6,11 @@
   2. [`POST /completions`](#2-post-completions)
   3. [`DELETE /completions`](#3-delete-completions)
   4. [`PUT /increment`](#4-put-increment)
-  5. [`PUT /dynamic-increment`](#5-put-dynamic-increment)
 
 ## Example Error Responses:
 
 All endpoints will return a 400 Bad Request if there was
-something wrong with the request json body.
+something wrong with the request json body. If an invalid token was provided a 401 Unauthorized Access will be returned.
 
 Otherwise, a 422 Unprocessable Entity will be returned if
 the server could not process the request.
@@ -31,7 +30,7 @@ of top possible completions for a given prefix.
 
 ### 1.1. Expected Payload:
 
-A `"prefix"` attribute must be included in the query string.
+A `"prefix"` and `"token`" attributes must be included in the query string.
 
 The following optional params can also be included:
 
@@ -44,11 +43,11 @@ If `"limit"` is not specified, the default limit of
 ### 1.2. Example Request:
 
 ```
-"/completions?prefix=m"
+"/completions?prefix=m&token=eyJhbGciOiJIUzI1NiI..."
 ```
 
 ```
-"/completions?prefix=m&limit=3&scores=true"
+"/completions?prefix=m&limit=3&scores=true&token=eyJhbGciOiJIUzI1NiI..."
 ```
 
 ### 1.3. Successful Response:
@@ -80,75 +79,40 @@ The response status code is 200 OK.
 
 ## 2. `POST /completions`
 
-This endpoint can be used to load
-new completions into your index. It can also be used
-to update existing completions in the index.
+This endpoint can be used to load new completions into your index.
 
 ### 2.1. Expected Payload:
 
-The json request body is expected to be either an
-array of strings or an array of objects.
-
-Whichever syntax is used, a completion must be specified.
-If the array-of-objects syntax is used, the `"score"`
-attribute is also required.
+The json request body is expected to an object consisting an array of strings and a token.
 
 ### 2.2. Example Request:
 
 *adding new completions*
 
 ```json
-[
-  "Mr. Mime",
-  "Mr. Magoo",
-  "Mr. Monster",
-  "Mr. McDonald",
-  "Mr. Macaroni"
-]
-```
-
-*adding new completions with scores*
-
-```json
-[
-  {
-    "completion": "Goku",
-    "score": -10000
-  },
-  {
-    ...
-  },
-  ...
-]
+{
+  "token": "eyJhbGciOiJIUzI1NiI...",
+  "completions": [
+    "Mr. Mime",
+    "Mr. Magoo",
+    "Mr. Monster",
+    "Mr. McDonald",
+    "Mr. Macaroni"
+  ]
+}
 ```
 
 *adding a single completion*
 
 ```json
-  [
-    "new completion"
-  ]
+{
+  "token": "eyJhbGciOiJIUzI1NiI...",
+  "completions": ["Mr. Mime"]
+}
 ```
 
-*updating the score of an existing completion*
-
-```json
-[
-  {
-    "completion": "existing completion",
-    "score": -300
-  }
-]
-```
 
 ### 2.3. Successful Response:
-
-*ideally:*
-
-202 returns a queue address as part of location header
-queue address will return a 201 with payload once finished
-
-*first stab at it:*
 
 The response status code is 204 No Content.
 
@@ -159,25 +123,28 @@ existing completions in the index.
 
 ### 3.1. Expected Payload:
 
-The json request body is expected to be an array of
-strings.
+The json request body is expected to an object consisting an array of strings and a token.
 
 ### 3.2. Example Request:
 
 ```json
-[
-  "Mr. Mime",
-  "Mr. Magoo",
-  "Mr. Monster",
-  "Mr. McDonald",
-  "Mr. Macaroni"
-]
+{
+  "token": "eyJhbGciOiJIUzI1NiI...",
+  "completions": [
+    "Mr. Mime",
+    "Mr. Magoo",
+    "Mr. Monster",
+    "Mr. McDonald",
+    "Mr. Macaroni"
+  ]
+}
 ```
 
 ```json
-[
-  "single completion"
-]
+{
+  "token": "eyJhbGciOiJIUzI1NiI...",
+  "completions": ["Mr. Mime"]
+}
 ```
 
 ### 3.3. Successful Response:
@@ -186,49 +153,21 @@ The response status code is 204 No Content.
 
 ## 4. `PUT /increment`
 
-This endpoint can be used to increment
-an existing completion's score by 1. Nothing will occur
-if the completion does not exist in the index. See
-PUT /dyanamic-increment if you want the completion to be added
-if it does not exist in the index while trying to increment.
+This endpoint can be used to increment a completion's score by 1.
 
 ### 4.1. Expected Payload:
 
-The json request body must include a `"completion"`
-attribute.
+The json request body is expected to an object consisting a completion and a token.
 
 ### 4.2. Example Request:
 
 ```json
 {
+  "token": "eyJhbGciOiJIUzI1NiI...",
   "completion": "Mr. Mime"
 }
 ```
 
 ### 4.3. Successful Response:
-
-The response status code is 204 No Content.
-
-## 5. `PUT /dynamic-increment`
-
-This endpoint can be used to increment
-an existing completion's score by 1. If the completion
-does not yet exist, the completion will be added to the
-index with its score set to 1.
-
-### 5.1. Expected Payload:
-
-The json request body must include a `"completion"`
-attribute.
-
-### 5.2. Example Request:
-
-```json
-{
-  "completion": "Mr. Mime"
-}
-```
-
-### 5.3. Successful Response:
 
 The response status code is 204 No Content.

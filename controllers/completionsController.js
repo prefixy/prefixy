@@ -48,8 +48,14 @@ module.exports = {
   },
 
   post: async function(req, res, next) {
-    // need to include token logic, as well as change the object this accepts to be able to accomodate token (and don't forget to update Joi)
-    const completions = req.body;
+    try {
+      resolveTenant(req.body.token);
+    } catch(error) {
+      error.status = 401;
+      return next(error);
+    }
+
+    const completions = req.body.completions;
 
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
@@ -62,8 +68,14 @@ module.exports = {
   },
 
   delete: async function(req, res, next) {
-    // need to include token logic, as well as change the object this accepts to be able to accomodate token (and don't forget to update Joi)
-    const completions = req.body;
+    try {
+      resolveTenant(req.body.token);
+    } catch(error) {
+      error.status = 401;
+      return next(error);
+    }
+    
+    const completions = req.body.completions;
 
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
