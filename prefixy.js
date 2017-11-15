@@ -25,7 +25,7 @@ class Prefixy {
 
     this.redisUrl = opts.redisUrl;
     this.mongoUrl = opts.mongoUrl;
-    this.tenant = opts.tenant;
+    this.tenant = opts.tenant; // could load from config file
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
     this.minChars = opts.minChars;

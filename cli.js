@@ -14,8 +14,9 @@ program
   .action(() => console.log('PONG'));
 
 program
-  .command('import <path>')
-  .action(async path => {
+  .command('import <path> <tenant>')
+  .action(async (path, tenant) => {
+    Prefixy.tenant = tenant;
     let result;
 
     try {
@@ -28,8 +29,9 @@ program
   });
 
 program
-  .command('insert <completion>')
-  .action(async (completion) => {
+  .command('insert <completion> <tenant>')
+  .action(async (completion, tenant) => {
+    Prefixy.tenant = tenant;
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions([completion]));
     } catch(e) {
@@ -38,8 +40,9 @@ program
   });
 
 program
-  .command('increment <completion>')
-  .action(async completion => {
+  .command('increment <completion> <tenant>')
+  .action(async (completion, tenant) => {
+    Prefixy.tenant = tenant;
     try {
       await Prefixy.invoke(() => Prefixy.increment(completion));
     } catch(e) {
@@ -48,10 +51,11 @@ program
   });
 
 program
-  .command('search <prefixQuery>')
+  .command('search <prefixQuery> <tenant>')
   .option('-l, --limit <limit>', 'add a limit', Prefixy.suggestionCount)
   .option('-s, --with-scores')
-  .action(async (prefixQuery, command) => {
+  .action(async (prefixQuery, tenant, command) => {
+    Prefixy.tenant = tenant;
     const withScores = command.withScores;
     const limit = command.limit;
     const args = [prefixQuery, { withScores, limit }];
@@ -67,8 +71,9 @@ program
   });
 
 program
-  .command('delete <completion>')
-  .action(async completion => {
+  .command('delete <completion> <tenant>')
+  .action(async (completion, tenant) => {
+    Prefixy.tenant = tenant;
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions([completion]));
     } catch(e) {
@@ -77,8 +82,9 @@ program
   });
 
 program
-  .command('persist <prefix>')
-  .action(async prefix => {
+  .command('persist <prefix> <tenant>')
+  .action(async (prefix, tenant) => {
+    Prefixy.tenant = tenant;
     try {
       await Prefixy.invoke(() => Prefixy.persistPrefix(prefix));
     } catch(e) {
@@ -87,8 +93,9 @@ program
   });
 
 program
-  .command('load <prefix>')
-  .action(async prefix => {
+  .command('load <prefix> <tenant>')
+  .action(async (prefix, tenant) => {
+    Prefixy.tenant = tenant;
     try {
       await Prefixy.invoke(() => Prefixy.loadPrefix(prefix));
     } catch(e) {

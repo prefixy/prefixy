@@ -48,6 +48,10 @@ app.use(function(err, req, res, next) {
   if (err.status === 422) {
     err.message = "The request could not be processed";
   }
+
+  if (err.status === 401) {
+    err.message = "Invalid token";
+  }
   // render the error page
   res.status(err.status || 500);
   res.json({error: err.message});

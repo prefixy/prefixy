@@ -6,6 +6,7 @@ module.exports = {
     prefix: Joi.string().required(),
     limit: Joi.number(),
     scores: Joi.boolean(),
+    token: Joi.string().required(),
   }),
 
   post: Joi.array().items(
