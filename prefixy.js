@@ -1,22 +1,15 @@
 const redis = require("redis");
+const mongo = require('mongodb');
 const fs = require("fs");
 const path = require("path");
 const JSONStream = require("JSONStream");
 const { Writer } = require(path.resolve(__dirname, "prefixyHelpers/Streamables"));
-
 const bluebird = require("bluebird");
 
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
 const CONFIG_FILE = path.resolve(__dirname, "prefixy-config.json");
-
-// later: configuration option - include full string
-
-// path represents a relative path from directory of app.js
-// or absolute path
-// currently expects array of completions in a json file
-
 
 const validateInputIsArray = (input, funcName) => {
   if (!Array.isArray(input)) {
@@ -30,17 +23,21 @@ class Prefixy {
   constructor() {
     const opts = Prefixy.parseOpts();
 
-    this.redis = opts.redis;
+    this.redisUrl = opts.redisUrl;
+    this.mongoUrl = opts.mongoUrl;
+    this.tenant = opts.tenant;
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
     this.minChars = opts.minChars;
     this.bucketLimit = opts.bucketLimit;
-    this.dataPath = 'data';
+    this.mongoClient = mongo.MongoClient;
   }
 
   static defaultOpts() {
     return {
-      redis: "redis://127.0.0.1:6379/0",
+      redisUrl: "redis://127.0.0.1:6379/0",
+      mongoUrl: "mongodb://localhost:27017/prefixy",
+      tenant: "tenant",
       maxMemory: 500,
       suggestionCount: 5,
       minChars: 1,
@@ -59,7 +56,8 @@ class Prefixy {
   }
 
   async invoke(cb) {
-    this.client = redis.createClient(this.redis);
+    this.client = redis.createClient({ url: this.redisUrl, prefix: this.tenant + ":" });
+
     return cb()
       .then((result) => {
         this.client.quit();
@@ -103,50 +101,54 @@ class Prefixy {
     return commands;
   }
 
-  async loadPrefix(prefix) {
-    // If we need to clear out the completions for a given prefix:
-    // await this.client.zremrangebyrank(prefix, 0, -1);
+  async mongoInsert(prefix, completions) {
+    const args = [{prefix}, {$set: {completions}}, {upsert: true}];
+    const db = await this.mongoClient.connect(this.mongoUrl);
+    const col = db.collection(this.tenant);
+    col.findOneAndUpdate(...args, (err, r) => db.close());
+  }
 
-    const targetPath = path.resolve(__dirname, `data/${prefix}.json`);
-    const commands = [];
+  async mongoDelete(prefix) {
+    const db = await this.mongoClient.connect(this.mongoUrl);
+    const col = db.collection(this.tenant);
+    col.findOneAndDelete({prefix}, (err, r) => db.close());
+  }
 
-    if (!fs.existsSync(targetPath)) {
-      return Promise.resolve("");
+  async mongoFind(prefix) {
+    const db = await this.mongoClient.connect(this.mongoUrl);
+    const completions = await db.collection(this.tenant).find({prefix}).limit(1).toArray();
+    db.close();
+    if (completions[0]) {
+      return completions[0].completions;
+    } else {
+      return [];
     }
+  }
 
-    const json = fs.readFileSync(targetPath, 'utf8');
-    const data = JSON.parse(json);
+  async mongoLoad(prefix) {
+    const commands = [];
+    const completions = await this.mongoFind(prefix);
 
-    for (var i = 0; i < data.length; i += 2) {
-      commands.push(['zadd', prefix, data[i + 1], data[i]]);
+    for (var i = 0; i < completions.length; i += 2) {
+      commands.push(['zadd', prefix, completions[i + 1], completions[i]]);
     }
 
     return this.client.batch(commands).execAsync();
   }
 
-  async persistPrefix(prefix) {
-    const writeFile = bluebird.promisify(fs.writeFile);
-    const unlink = bluebird.promisify(fs.unlink);
+  async mongoPersist(prefix) {
     const completions = await this.client.zrangeAsync(prefix, 0, -1, 'WITHSCORES');
-    const targetPath = path.resolve(__dirname, `${this.dataPath}/${prefix}.json`);
-    const data = JSON.stringify(completions);
 
-    if (completions.length === 0 && fs.existsSync(targetPath)) {
-      return unlink(targetPath).then((err) => {
-        if (err) { return console.log(err); }
-      });
-    } else if (completions.length === 0) {
-      return Promise.resolve();
+    if (completions.length === 0) {
+      this.mongoDelete(prefix);
     } else {
-      return writeFile(targetPath, data, 'utf8').then((err) => {
-        if (err) { return console.log(err); }
-      });
+      this.mongoInsert(prefix, completions);
     }
   }
 
   async persistPrefixes(prefixes) {
     for (var i = 0; i < prefixes.length; i++) {
-      await this.persistPrefix(prefixes[i]);
+      await this.mongoPersist(prefixes[i]);
     }
   }
 
@@ -155,7 +157,7 @@ class Prefixy {
       let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
 
       if (count === 0) {
-        await this.loadPrefix(prefixes[i]);
+        await this.mongoLoad(prefixes[i]);
       }
 
       if (count < this.bucketLimit) {
@@ -211,7 +213,7 @@ class Prefixy {
     let result = await this.client.zrangeAsync(...args);
 
     if (result.length === 0) {
-      await this.loadPrefix(prefixQuery)
+      await this.mongoLoad(prefixQuery);
       result = await this.client.zrangeAsync(...args);
     }
 
@@ -229,7 +231,7 @@ class Prefixy {
       count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
 
       if (count === 0) {
-        await this.loadPrefix(prefixes[i]);
+        await this.mongoLoad(prefixes[i]);
       }
 
       if (count >= limit) {
