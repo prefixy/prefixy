@@ -73,13 +73,18 @@ class Prefixy {
   }
 
   async invoke(cb) {
-    this.client = redis.createClient({ url: this.redisUrl, prefix: this.tenant + ":" });
+    try {
+      this.client = redis.createClient({ url: this.redisUrl, prefix: this.tenant + ":" });
 
-    return cb()
-      .then((result) => {
-        this.client.quit();
-        return result;
-      });
+      return cb()
+        .then((result) => {
+          this.client.quit();
+          return result;
+        });
+    } catch(e) {
+      console.log("yippppiieeeeeee", e);
+      return e;
+    }
   }
 
   normalizePrefix(string) {
