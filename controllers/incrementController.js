@@ -5,7 +5,7 @@ module.exports = async function(req, res, next) {
   const completion = req.body.completion;
 
   try {
-    await Prefixy.fixedIncrementScore(completion);
+    await Prefixy.invoke(() => Prefixy.increment(completion));
   } catch(error) {
     error.status = 422;
     return next(error);

@@ -3,11 +3,11 @@ const fs = require('fs');
 const path = require('path');
 
 const fakeData = [];
-const count = 10000;
+const count = 1000;
 const targetPath = path.resolve(__dirname, "sample-data/sample.json");
 
 for (var i = 0; i < count; i++) {
-  fakeData.push("waldo " + faker.name.lastName() + ", " + faker.name.firstName());
+  fakeData.push(faker.name.findName());
 }
 
 const fakeJson = JSON.stringify(fakeData);

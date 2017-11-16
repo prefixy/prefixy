@@ -1,5 +1,7 @@
 /node_modules
-/sample-data
+/sample-data/*
+/data/*
 *.rdb
 
 .DS_Store
+prefixy-config.json

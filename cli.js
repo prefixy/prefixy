@@ -14,72 +14,87 @@ program
   .action(() => console.log('PONG'));
 
 program
-  .command('insert <completion>')
-  .option('-s, --with-score <score>', 'add a score', '0')
-  .action(async (completion, command) => {
-    const arg = [
-      { completion: completion, score: command.withScore }
-    ];
+  .command('import <path>')
+  .action(async path => {
+    let result;
 
-    await Prefixy.insertCompletions(arg);
-    Prefixy.client.quit();
+    try {
+      result = await Prefixy.invoke(() => Prefixy.importFile(path));
+    } catch(e) {
+      console.log(e);
+    }
+
+    console.log("\n", result);
   });
 
 program
-  .command('setscore <completion> <score>')
-  .action(async (completion, score) => {
-    await Prefixy.insertCompletions([{ completion, score }]);
-    Prefixy.client.quit();
+  .command('insert <completion>')
+  .action(async (completion) => {
+    try {
+      await Prefixy.invoke(() => Prefixy.insertCompletions([completion]));
+    } catch(e) {
+      console.log(e);
+    }
+  });
+
+program
+  .command('increment <completion>')
+  .action(async completion => {
+    try {
+      await Prefixy.invoke(() => Prefixy.increment(completion));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program
   .command('search <prefixQuery>')
+  .option('-l, --limit <limit>', 'add a limit', Prefixy.suggestionCount)
   .option('-s, --with-scores')
   .action(async (prefixQuery, command) => {
+    const withScores = command.withScores;
+    const limit = command.limit;
+    const args = [prefixQuery, { withScores, limit }];
     let result;
-    if (command.withScores) {
-      result = await Prefixy.search(prefixQuery, { withScores: true });
-    } else {
-      result = await Prefixy.search(prefixQuery);
-    }
-    Prefixy.client.quit();
-    console.log(result);
-  });
 
-program
-  .command('suggestions <prefixQuery>')
-  .option('-s, --with-scores')
-  .action(async (prefixQuery, command) => {
-    let result;
-    if (command.withScores) {
-      result = await Prefixy.search(prefixQuery, { limit: 5, withScores: true });
-    } else {
-      result = await Prefixy.search(prefixQuery, { limit: 5 });
+    try {
+      result = await Prefixy.invoke(() => Prefixy.search(...args));
+    } catch(e) {
+      console.log(e);
     }
-    Prefixy.client.quit();
+
     console.log(result);
   });
 
 program
   .command('delete <completion>')
   .action(async completion => {
-    await Prefixy.deleteCompletions([completion])
-    Prefixy.client.quit();
+    try {
+      await Prefixy.invoke(() => Prefixy.deleteCompletions([completion]));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program
-  .command('increment <completion>')
-  .action(async completion => {
-    const scores = await Prefixy.fixedIncrementScore(completion)
-    Prefixy.client.quit();
-    console.log(scores);
+  .command('persist <prefix>')
+  .action(async prefix => {
+    try {
+      await Prefixy.invoke(() => Prefixy.persistPrefix(prefix));
+    } catch(e) {
+      console.log(e);
+    }
   });
 
 program
-  .command('import <path>')
-  .action(async path => {
-    await Prefixy.importFile(path)
-    Prefixy.client.quit();
+  .command('load <prefix>')
+  .action(async prefix => {
+    try {
+      await Prefixy.invoke(() => Prefixy.loadPrefix(prefix));
+    } catch(e) {
+      console.log(e);
+    }
   });
+
 
 program.parse(process.argv);

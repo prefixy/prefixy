@@ -87,7 +87,7 @@ describe("Prefixy", () => {
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("wo", 0, -1);
+      ).toHaveBeenCalledWith("wo", 0, Prefixy.suggestionCount - 1);
     });
 
     it("calls zrangeAsync with the options provided to search", () => {
@@ -103,7 +103,7 @@ describe("Prefixy", () => {
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("mew two", 0, -1);
+      ).toHaveBeenCalledWith("mew two", 0, Prefixy.suggestionCount - 1);
     });
   });
 });

@@ -13,15 +13,15 @@ const formatCompletionsWithScores = completions => {
 
 module.exports = {
   get: async function(req, res) {
-    let completions;
     const prefix = req.query.prefix;
     const opts = {
-      limit: req.query.limit || 5,
+      limit: req.query.limit || Prefixy.suggestionCount,
       withScores: req.query.scores || false,
     };
+    let completions;
 
     try {
-      completions = await Prefixy.search(prefix, opts);
+      completions = await Prefixy.invoke(() => Prefixy.search(prefix, opts));
     } catch(error) {
       error.status = 422;
       return next(error);
@@ -38,7 +38,7 @@ module.exports = {
     const completions = req.body;
 
     try {
-      await Prefixy.insertCompletions(completions);
+      await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
     } catch(error) {
       error.status = 422;
       return next(error);
@@ -51,8 +51,7 @@ module.exports = {
     const completions = req.body;
 
     try {
-      const completions = req.body;
-      await Prefixy.deleteCompletions(completions);
+      await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
     } catch(error) {
       error.status = 422;
       return next(error);

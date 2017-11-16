@@ -1,19 +1,31 @@
-prefix keys
- - keys
-completions
- - all values for a prefix
- - all possible ways a prefix can be completed that we're storing
- - the "bucket" that a prefix key points to
-suggestions
- - completions with the top score that are returned to the user
-prefix query
- - what user inputs E.g. what they type into the field
-selection
- - what user selects
-submission
- - what user has typed when they submit search form
-index
- - General: how we structure our data for prefix search
- - Specific: link between prefix and individual completion
-score
- - score based on relevancy of this completion for the prefix
+# Project Glossary
+
+##### prefix
+ - a combination of letters that can be completed
+ to form a word or phrase
+
+##### completions
+ - refers to all possible ways that a prefix can be completed
+
+##### suggestions
+ - top completions which shoulld be returned to the user
+
+##### prefix query
+ - what user inputs as they form their search query
+
+##### selection
+ - refers to a suggestion that the user has clicked
+ on or otherwise selected
+
+##### submission
+ - refers to the completion that is in the search box
+ when the user submits the form
+
+##### index
+ - *in general*: data that is structured in an optimal
+ way for prefix search
+ - *specifically*: the link between a prefix and a
+ given completion
+
+##### score
+ - a measure of the relevancy of a completion for some prefix
