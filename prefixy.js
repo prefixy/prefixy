@@ -28,7 +28,9 @@ class Prefixy {
     this.tenant = opts.tenant;
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
-    this.minChars = opts.minChars;
+    this.prefixMinChars = opts.prefixMinChars;
+    this.prefixMaxChars = opts.prefixMaxChars;
+    this.completionMaxChars = opts.completionMaxChars;
     this.bucketLimit = opts.bucketLimit;
     this.mongoClient = mongo.MongoClient;
     this.secret = opts.secret;
@@ -41,7 +43,9 @@ class Prefixy {
       tenant: "tenant",
       maxMemory: 500,
       suggestionCount: 5,
-      minChars: 1,
+      prefixMinChars: 1,
+      prefixMaxChars: 15,
+      completionMaxChars: 50,
       bucketLimit: 50
     };
   }
@@ -78,10 +82,25 @@ class Prefixy {
       });
   }
 
-  extractPrefixes(completion) {
-    completion = completion.toLowerCase();
+  normalizePrefix(string) {
+    string = string.slice(0, this.prefixMaxChars);
+    string = string.toLowerCase();
+    string = string.replace(/\s{2,}/g, " "); // remove instances of more than one whitespace
+    return string;
+  }
 
-    const start = this.minChars;
+  normalizeCompletion(string) {
+    string = string.slice(0, this.completionMaxChars);
+    string = string.toLowerCase();
+    string = string.trim();
+    string = string.replace(/\s{2,}/g, " "); // remove instances of more than one whitespace
+    return string;
+  }
+
+  extractPrefixes(completion) {
+    completion = this.normalizePrefix(completion);
+
+    const start = this.prefixMinChars;
     const prefixes = [];
     for (let i = start; i <= completion.length; i++) {
       prefixes.push(completion.slice(0, i));
@@ -173,6 +192,7 @@ class Prefixy {
 
     for (let i = 0; i < array.length; i++) {
       let completion = array[i];
+      completion = this.normalizeCompletion(completion);
       const prefixes = this.extractPrefixes(completion);
 
       allPrefixes = [...allPrefixes, ...prefixes];
@@ -188,6 +208,7 @@ class Prefixy {
     let allPrefixes = [];
     const commands = [];
     completions.forEach(completion => {
+      completion = this.normalizeCompletion(completion);
       const prefixes = this.extractPrefixes(completion);
       allPrefixes = [...allPrefixes, ...prefixes];
 
@@ -207,7 +228,7 @@ class Prefixy {
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
-    let args = [prefixQuery.toLowerCase(), 0, limit];
+    let args = [this.normalizePrefix(prefixQuery), 0, limit];
     if (opts.withScores) args = args.concat('WITHSCORES');
 
     let result = await this.client.zrangeAsync(...args);
@@ -221,6 +242,7 @@ class Prefixy {
   }
 
   async increment(completion) {
+    completion = this.normalizeCompletion(completion);
     const prefixes = this.extractPrefixes(completion);
     const commands = [];
     const limit = this.bucketLimit;
