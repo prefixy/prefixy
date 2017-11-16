@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "private": true,
+  "engines": {
+    "node": "8.8.1"
+  },
   "scripts": {
     "start": "node ./bin/www --ignore data/",
     "seed": "node seed.js",
