@@ -101,7 +101,7 @@ program
   });
 
 program
-  .command('persist <prefix> <tenant>')
+  .command('persist <prefix>')
   .action(async prefix => {
     try {
       await Prefixy.invoke(() => Prefixy.persistPrefix(prefix));
@@ -111,7 +111,7 @@ program
   });
 
 program
-  .command('load <prefix> <tenant>')
+  .command('load <prefix>')
   .action(async prefix => {
     try {
       await Prefixy.invoke(() => Prefixy.loadPrefix(prefix));
