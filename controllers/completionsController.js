@@ -18,6 +18,8 @@ const resolveTenant = token => {
 
 module.exports = {
   get: async function(req, res, next) {
+    console.log("got here");
+
     try {
       resolveTenant(req.query.token);
     } catch(error) {
