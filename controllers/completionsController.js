@@ -1,6 +1,7 @@
 const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const _ = require('lodash');
+const jwt = require("jsonwebtoken");
 
 const formatCompletionsWithScores = completions => {
   return _.chunk(completions, 2).map(completion => (
@@ -11,8 +12,19 @@ const formatCompletionsWithScores = completions => {
   ));
 };
 
+const resolveTenant = token => {
+  Prefixy.tenant = jwt.verify(token, Prefixy.secret).tenant;
+};
+
 module.exports = {
-  get: async function(req, res) {
+  get: async function(req, res, next) {
+    try {
+      resolveTenant(req.query.token);
+    } catch(error) {
+      error.status = 401;
+      return next(error);
+    }
+
     const prefix = req.query.prefix;
     const opts = {
       limit: req.query.limit || Prefixy.suggestionCount,
@@ -35,7 +47,14 @@ module.exports = {
   },
 
   post: async function(req, res, next) {
-    const completions = req.body;
+    try {
+      resolveTenant(req.body.token);
+    } catch(error) {
+      error.status = 401;
+      return next(error);
+    }
+
+    const completions = req.body.completions;
 
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
@@ -48,7 +67,14 @@ module.exports = {
   },
 
   delete: async function(req, res, next) {
-    const completions = req.body;
+    try {
+      resolveTenant(req.body.token);
+    } catch(error) {
+      error.status = 401;
+      return next(error);
+    }
+
+    const completions = req.body.completions;
 
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));

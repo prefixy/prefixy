@@ -6,14 +6,16 @@ module.exports = {
     prefix: Joi.string().required(),
     limit: Joi.number(),
     scores: Joi.boolean(),
+    token: Joi.string().required(),
   }),
 
-  post: Joi.array().items(
-    Joi.string(),
-    Joi.object().keys({
-      completion: Joi.string().required(),
-      score: Joi.number().required(),
-    })),
+  post: Joi.object().keys({
+    token: Joi.string().required(),
+    completions: Joi.array().items(Joi.string().required()),
+  }),
 
-  delete: Joi.array().items(Joi.string().required())
+  delete: Joi.object().keys({
+    token: Joi.string().required(),
+    completions: Joi.array().items(Joi.string().required()),
+  }),
 };

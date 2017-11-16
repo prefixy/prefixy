@@ -3,6 +3,7 @@
 const path = require("path");
 const Prefixy = require(path.resolve(__dirname, "prefixy"));
 const program = require("commander");
+const jwt = require("jsonwebtoken");
 
 program
   .version('0.0.1')
@@ -12,6 +13,29 @@ program
 program
   .command('ping')
   .action(() => console.log('PONG'));
+
+program
+  .command('token <token>')
+  .action(token => {
+    try {
+      const tenant = jwt.verify(token, Prefixy.secret).tenant;
+      Prefixy.updateTenant(tenant);
+    } catch(e) {
+      console.log("Invalid token -- tenant not updated");
+      console.log(e);
+    }
+  });
+
+program
+  .command('tenant <tenant>')
+  .action(tenant => {
+    try {
+      Prefixy.updateTenant(tenant);
+    } catch(e) {
+      console.log("Invalid tenant -- not updated");
+      console.log(e);
+    }
+  });
 
 program
   .command('import <path>')
@@ -29,7 +53,7 @@ program
 
 program
   .command('insert <completion>')
-  .action(async (completion) => {
+  .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions([completion]));
     } catch(e) {

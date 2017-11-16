@@ -31,6 +31,7 @@ class Prefixy {
     this.minChars = opts.minChars;
     this.bucketLimit = opts.bucketLimit;
     this.mongoClient = mongo.MongoClient;
+    this.secret = opts.secret;
   }
 
   static defaultOpts() {
@@ -53,6 +54,18 @@ class Prefixy {
     } catch(e) {}
 
     return { ...this.defaultOpts(), ...opts };
+  }
+
+  updateTenant(tenant) {
+    let opts = {};
+
+    try {
+      opts = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
+    } catch(e) {}
+
+    opts = { ...opts, tenant};
+
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(opts), "utf8");
   }
 
   async invoke(cb) {
