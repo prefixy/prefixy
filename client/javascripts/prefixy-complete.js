@@ -1,14 +1,18 @@
-function PrefixyComplete(input, prefixyUrl) {
+function PrefixyComplete(input, prefixyUrl, opts={}) {
   this.input = input;
   this.completionsUrl = prefixyUrl + '/completions';
   this.incrementUrl = prefixyUrl + '/increment';
+  this.delay = opts.delay || 0;
+  this.token = opts.token;
+  this.suggestionCount = opts.suggestionCount;
+  this.minChars = opts.minChars || 1;
 
   this.listUI = null;
   this.overlay = null;
 
   this.wrapInput();
   this.createUI();
-  this.valueChanged = debounce(this.valueChanged.bind(this), 0);
+  this.valueChanged = debounce(this.valueChanged.bind(this), this.delay);
   this.bindEvents();
 
   this.reset();
@@ -74,17 +78,21 @@ PrefixyComplete.prototype.draw = function() {
 };
 
 PrefixyComplete.prototype.fetchSuggestions = function(query, callback) {
-  axios.get(this.completionsUrl, {
-    params: {
-      prefix: query
-    }
-  }).then((response) => callback(response.data));
+  var params = { prefix: query, token: this.token }
+
+  if (this.suggestionCount) {
+    params.limit = this.suggestionCount;
+  }
+
+  axios.get(this.completionsUrl, { params })
+    .then((response) => callback(response.data));
 };
 
 PrefixyComplete.prototype.submitCompletion = function() {
   var completion = this.input.value;
 
-  axios.put(this.incrementUrl, { completion: completion });
+  this.input.value = '';
+  axios.put(this.incrementUrl, { completion, token: this.token });
 };
 
 PrefixyComplete.prototype.handleKeydown = function(event) {
@@ -120,7 +128,7 @@ PrefixyComplete.prototype.handleKeydown = function(event) {
       this.bestSuggestionIndex = null;
       this.draw();
       break;
-    case 'Escape': // escape
+    case 'Escape':
       this.input.value = this.previousValue;
       this.reset();
       break;
@@ -143,14 +151,13 @@ PrefixyComplete.prototype.reset = function(event) {
   this.selectedIndex = null;
   this.previousValue = null;
   this.bestSuggestionIndex = null;
-  this.input.value = '';
   this.draw();
 };
 
 PrefixyComplete.prototype.valueChanged = function() {
   var value = this.input.value;
   this.previousValue = value;
-  if (value.length > 0) {
+  if (value.length >= this.minChars) {
     this.fetchSuggestions(value, function(suggestions) {
       this.visible = true;
       this.suggestions = suggestions;

@@ -120,20 +120,6 @@ class Prefixy {
     return promise;
   }
 
-  commandsToAddCompletion(item) {
-    const completion = item.completion || item;
-    const score = item.score || 0;
-    completion = this.normalizeCompletion(completion);
-    const prefixes = this.extractPrefixes(completion);
-
-    let commands = [];
-    prefixes.forEach(prefix =>
-      commands.push(['zadd', prefix, -score, completion])
-    );
-
-    return commands;
-  }
-
   async mongoInsert(prefix, completions) {
     const args = [{prefix}, {$set: {completions}}, {upsert: true}];
     const db = await this.mongoClient.connect(this.mongoUrl);
