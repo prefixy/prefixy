@@ -3,6 +3,7 @@
 const path = require("path");
 const Prefixy = require(path.resolve(__dirname, "prefixy"));
 const program = require("commander");
+const jwt = require("jsonwebtoken");
 
 program
   .version('0.0.1')
@@ -14,9 +15,20 @@ program
   .action(() => console.log('PONG'));
 
 program
-  .command('import <path> <tenant>')
-  .action(async (path, tenant) => {
-    Prefixy.tenant = tenant;
+  .command('tenant <token>')
+  .action(token => {
+    try {
+      const tenant = jwt.verify(token, Prefixy.secret).tenant;
+      Prefixy.updateTenant(tenant);
+    } catch(e) {
+      console.log("Invalid token -- tenant not updated");
+      console.log(e);
+    }
+  });
+
+program
+  .command('import <path>')
+  .action(async path => {
     let result;
 
     try {
@@ -29,9 +41,8 @@ program
   });
 
 program
-  .command('insert <completion> <tenant>')
-  .action(async (completion, tenant) => {
-    Prefixy.tenant = tenant;
+  .command('insert <completion>')
+  .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions([completion]));
     } catch(e) {
@@ -40,9 +51,8 @@ program
   });
 
 program
-  .command('increment <completion> <tenant>')
-  .action(async (completion, tenant) => {
-    Prefixy.tenant = tenant;
+  .command('increment <completion>')
+  .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.increment(completion));
     } catch(e) {
@@ -51,11 +61,10 @@ program
   });
 
 program
-  .command('search <prefixQuery> <tenant>')
+  .command('search <prefixQuery>')
   .option('-l, --limit <limit>', 'add a limit', Prefixy.suggestionCount)
   .option('-s, --with-scores')
-  .action(async (prefixQuery, tenant, command) => {
-    Prefixy.tenant = tenant;
+  .action(async (prefixQuery, command) => {
     const withScores = command.withScores;
     const limit = command.limit;
     const args = [prefixQuery, { withScores, limit }];
@@ -71,9 +80,8 @@ program
   });
 
 program
-  .command('delete <completion> <tenant>')
-  .action(async (completion, tenant) => {
-    Prefixy.tenant = tenant;
+  .command('delete <completion>')
+  .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions([completion]));
     } catch(e) {
@@ -83,8 +91,7 @@ program
 
 program
   .command('persist <prefix> <tenant>')
-  .action(async (prefix, tenant) => {
-    Prefixy.tenant = tenant;
+  .action(async prefix => {
     try {
       await Prefixy.invoke(() => Prefixy.persistPrefix(prefix));
     } catch(e) {
@@ -94,8 +101,7 @@ program
 
 program
   .command('load <prefix> <tenant>')
-  .action(async (prefix, tenant) => {
-    Prefixy.tenant = tenant;
+  .action(async prefix => {
     try {
       await Prefixy.invoke(() => Prefixy.loadPrefix(prefix));
     } catch(e) {

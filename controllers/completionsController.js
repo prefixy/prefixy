@@ -2,7 +2,6 @@ const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const _ = require('lodash');
 const jwt = require("jsonwebtoken");
-const secret = "so-many-pizzerias";
 
 const formatCompletionsWithScores = completions => {
   return _.chunk(completions, 2).map(completion => (
@@ -14,7 +13,7 @@ const formatCompletionsWithScores = completions => {
 };
 
 const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, secret).tenant;
+  Prefixy.tenant = jwt.verify(token, Prefixy.secret).tenant;
 };
 
 module.exports = {
@@ -74,7 +73,7 @@ module.exports = {
       error.status = 401;
       return next(error);
     }
-    
+
     const completions = req.body.completions;
 
     try {
