@@ -78,7 +78,7 @@ PrefixyComplete.prototype.draw = function() {
 };
 
 PrefixyComplete.prototype.fetchSuggestions = function(query, callback) {
-  var params = { prefix: query }
+  var params = { prefix: query, token: this.token }
 
   if (this.suggestionCount) {
     params.limit = this.suggestionCount;
@@ -92,7 +92,7 @@ PrefixyComplete.prototype.submitCompletion = function() {
   var completion = this.input.value;
 
   this.input.value = '';
-  axios.put(this.incrementUrl, { completion: completion });
+  axios.put(this.incrementUrl, { completion, token: this.token });
 };
 
 PrefixyComplete.prototype.handleKeydown = function(event) {
