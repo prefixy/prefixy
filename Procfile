@@ -1,1 +1,1 @@
-web: node ./bin/www --ignore data/
+web: node ./bin/www
