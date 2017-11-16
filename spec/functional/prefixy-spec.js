@@ -51,7 +51,7 @@ describe("Prefixy works with redis", () => {
       await Prefixy.deleteCompletions(completions);
     });
 
-    xit("can add strings containing special characters", async () => {
+    it("can add strings containing special characters", async () => {
       await Prefixy.insertCompletions(["!@#$!@!#  !#@!/\\"]);
       const prefix1 = await Prefixy.search("!@");
       const prefix2 = await Prefixy.search("!@#$!@!#  ");
