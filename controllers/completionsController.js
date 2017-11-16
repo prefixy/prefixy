@@ -18,7 +18,6 @@ const resolveTenant = token => {
 
 module.exports = {
   get: async function(req, res, next) {
-    console.log("got here");
 
     try {
       resolveTenant(req.query.token);
@@ -26,6 +25,8 @@ module.exports = {
       error.status = 401;
       return next(error);
     }
+    console.log("got here!@#!@#!#!@$%#$%#@$@#$@#$@$@@#");
+
 
     const prefix = req.query.prefix;
     const opts = {
