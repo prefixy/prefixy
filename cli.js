@@ -15,13 +15,24 @@ program
   .action(() => console.log('PONG'));
 
 program
-  .command('tenant <token>')
+  .command('token <token>')
   .action(token => {
     try {
       const tenant = jwt.verify(token, Prefixy.secret).tenant;
       Prefixy.updateTenant(tenant);
     } catch(e) {
       console.log("Invalid token -- tenant not updated");
+      console.log(e);
+    }
+  });
+
+program
+  .command('tenant <tenant>')
+  .action(tenant => {
+    try {
+      Prefixy.updateTenant(tenant);
+    } catch(e) {
+      console.log("Invalid tenant -- not updated");
       console.log(e);
     }
   });
