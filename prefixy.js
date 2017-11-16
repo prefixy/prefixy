@@ -85,7 +85,7 @@ class Prefixy {
   normalizePrefix(string) {
     string = string.slice(0, this.prefixMaxChars);
     string = string.toLowerCase();
-    string = string.replace(/\s/g, ""); // remove whitespace
+    string = string.replace(/\s{2,}/g, " "); // remove instances of more than one whitespace
     return string;
   }
 
@@ -93,7 +93,7 @@ class Prefixy {
     string = string.slice(0, this.completionMaxChars);
     string = string.toLowerCase();
     string = string.trim();
-    string = string.replace(/\s{2,}/g, " "); // remove instances of more than one space
+    string = string.replace(/\s{2,}/g, " "); // remove instances of more than one whitespace
     return string;
   }
 
@@ -199,12 +199,12 @@ class Prefixy {
     }
   }
 
-  async insertCompletions(array) {   
+  async insertCompletions(array) {
     validateInputIsArray(array, "insertCompletions");
 
     let allPrefixes = [];
 
-    for (let i = 0; i < array.length; i++) {      
+    for (let i = 0; i < array.length; i++) {
       let completion = array[i];
       completion = this.normalizeCompletion(completion);
       const prefixes = this.extractPrefixes(completion);
