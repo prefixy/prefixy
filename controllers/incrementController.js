@@ -1,9 +1,10 @@
+require('dotenv').config();
 const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const jwt = require("jsonwebtoken");
 
 const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, Prefixy.secret).tenant;
+  Prefixy.tenant = jwt.verify(token, process.env.SECRET).tenant;
 };
 
 module.exports = async function(req, res, next) {
