@@ -73,12 +73,39 @@ class Prefixy {
   }
 
   async invoke(cb) {
-    this.client = redis.createClient({ url: this.redisUrl, prefix: this.tenant + ":" });
+    const redisOptions = {
+      url: this.redisUrl, 
+      prefix: this.tenant + ":",
+      retry_strategy: function (options) {
+        if (options.error && options.error.code === 'ECONNREFUSED') {
+          // End reconnecting on a specific error and flush all commands with
+          // a individual error
+          return new Error('The server refused the connection');
+        }
+        if (options.total_retry_time > 1000 * 60 * 60) {
+          // End reconnecting after a specific timeout and flush all commands
+          // with a individual error
+          return new Error('Retry time exhausted');
+        }
+        if (options.attempt > 10) {
+          // End reconnecting with built in error
+          return undefined;
+        }
+        // reconnect after
+        return Math.min(options.attempt * 100, 3000);
+      },
+    }
+  
+    this.client = redis.createClient(redisOptions);
 
     return cb()
       .then((result) => {
         this.client.quit();
         return result;
+      }).catch(err => { 
+        console.log(err.message);
+        err.message = "Internal Server Error";
+        throw err; 
       });
   }
 

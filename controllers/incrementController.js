@@ -19,7 +19,6 @@ module.exports = async function(req, res, next) {
   try {
     await Prefixy.invoke(() => Prefixy.increment(completion));
   } catch(error) {
-    error.status = 422;
     return next(error);
   }
 

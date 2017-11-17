@@ -35,7 +35,6 @@ module.exports = {
     try {
       completions = await Prefixy.invoke(() => Prefixy.search(prefix, opts));
     } catch(error) {
-      error.status = 422;
       return next(error);
     }
 
@@ -59,7 +58,6 @@ module.exports = {
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
     } catch(error) {
-      error.status = 422;
       return next(error);
     }
 
@@ -79,7 +77,6 @@ module.exports = {
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
     } catch(error) {
-      error.status = 422;
       return next(error);
     }
 

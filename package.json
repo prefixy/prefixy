@@ -4,8 +4,11 @@
   "description": "",
   "main": "index.js",
   "private": true,
+  "engines": {
+    "node": "8.8.1"
+  },
   "scripts": {
-    "start": "nodemon ./bin/www --ignore data/",
+    "start": "node ./bin/www",
     "seed": "node seed.js",
     "test": "jasmine",
     "cli": "node cli.js"
