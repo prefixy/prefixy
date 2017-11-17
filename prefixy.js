@@ -1,3 +1,4 @@
+require('dotenv').config()
 const redis = require("redis");
 const mongo = require('mongodb');
 const fs = require("fs");
@@ -38,8 +39,8 @@ class Prefixy {
 
   static defaultOpts() {
     return {
-      redisUrl: "redis://127.0.0.1:6379/0",
-      mongoUrl: "mongodb://localhost:27017/prefixy",
+      redisUrl: process.env.REDIS_URL,
+      mongoUrl: process.env.MONGODB_URI,
       tenant: "tenant",
       maxMemory: 500,
       suggestionCount: 5,
