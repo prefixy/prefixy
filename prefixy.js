@@ -34,7 +34,6 @@ class Prefixy {
     this.completionMaxChars = opts.completionMaxChars;
     this.bucketLimit = opts.bucketLimit;
     this.mongoClient = mongo.MongoClient;
-    this.secret = opts.secret;
   }
 
   static defaultOpts() {
@@ -61,7 +60,7 @@ class Prefixy {
     return { ...this.defaultOpts(), ...opts };
   }
 
-  updateTenant(tenant) {
+  cliUpdateTenant(tenant) {
     let opts = {};
 
     try {
@@ -152,6 +151,7 @@ class Prefixy {
     const args = [{prefix}, {$set: {completions}}, {upsert: true}];
     const db = await this.mongoClient.connect(this.mongoUrl);
     const col = db.collection(this.tenant);
+    col.createIndex({prefix: "text"}, {background: true});
     col.findOneAndUpdate(...args, (err, r) => db.close());
   }
 
