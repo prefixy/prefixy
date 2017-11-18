@@ -1,3 +1,4 @@
+require('dotenv').config();
 const redis = require("redis");
 const mongo = require('mongodb');
 const fs = require("fs");
@@ -33,13 +34,12 @@ class Prefixy {
     this.completionMaxChars = opts.completionMaxChars;
     this.bucketLimit = opts.bucketLimit;
     this.mongoClient = mongo.MongoClient;
-    this.secret = opts.secret;
   }
 
   static defaultOpts() {
     return {
-      redisUrl: "redis://127.0.0.1:6379/0",
-      mongoUrl: "mongodb://localhost:27017/prefixy",
+      redisUrl: process.env.REDIS_URL,
+      mongoUrl: process.env.MONGODB_URI,
       tenant: "tenant",
       maxMemory: 500,
       suggestionCount: 5,
@@ -60,7 +60,7 @@ class Prefixy {
     return { ...this.defaultOpts(), ...opts };
   }
 
-  updateTenant(tenant) {
+  cliUpdateTenant(tenant) {
     let opts = {};
 
     try {
@@ -151,6 +151,7 @@ class Prefixy {
     const args = [{prefix}, {$set: {completions}}, {upsert: true}];
     const db = await this.mongoClient.connect(this.mongoUrl);
     const col = db.collection(this.tenant);
+    col.createIndex({prefix: "text"}, {background: true});
     col.findOneAndUpdate(...args, (err, r) => db.close());
   }
 

@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const fakeData = [];
-const count = 1000;
+const count = 500;
 const targetPath = path.resolve(__dirname, "sample-data/sample.json");
 
 for (var i = 0; i < count; i++) {

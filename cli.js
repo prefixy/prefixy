@@ -30,7 +30,7 @@ program
   .command('tenant <tenant>')
   .action(tenant => {
     try {
-      Prefixy.updateTenant(tenant);
+      Prefixy.cliUpdateTenant(tenant);
     } catch(e) {
       console.log("Invalid tenant -- not updated");
       console.log(e);
