@@ -24,7 +24,6 @@ class Prefixy {
     const opts = Prefixy.parseOpts();
     const redisOptions = {
       url: opts.redisUrl, 
-      prefix: opts.tenant + ":",
       retry_strategy: function (options) {
         if (options.error && options.error.code === 'ECONNREFUSED') {
           // End reconnecting on a specific error and flush all commands with
@@ -133,6 +132,10 @@ class Prefixy {
     return prefixes;
   }
 
+  addTenant(prefix) {
+    return this.tenant + ":" + prefix;
+  }
+
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
@@ -206,7 +209,7 @@ class Prefixy {
       }
 
       if (count < this.bucketLimit) {
-        await this.client.zaddAsync(prefixes[i], 'NX', 0, completion);
+        await this.client.zaddAsync(this.addTenant(prefixes[i]), 'NX', 0, completion);
       }
     }
   }
@@ -239,7 +242,7 @@ class Prefixy {
       allPrefixes = [...allPrefixes, ...prefixes];
 
       prefixes.forEach(prefix =>
-        commands.push(["zrem", prefix, completion])
+        commands.push(["zrem", this.addTenant(prefix), completion])
       );
     });
 
@@ -254,7 +257,7 @@ class Prefixy {
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
 
-    let args = [this.normalizePrefix(prefixQuery), 0, limit];
+    let args = [this.addTenant(this.normalizePrefix(prefixQuery)), 0, limit];
     if (opts.withScores) args = args.concat('WITHSCORES');
 
     let result = await this.client.zrangeAsync(...args);
@@ -274,21 +277,23 @@ class Prefixy {
     const limit = this.bucketLimit;
     let count;
     let last;
+    let prefix;
 
     for (var i = 0; i < prefixes.length; i++) {
-      count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+      prefix = this.addTenant(prefixes[i]); // for redis, not mongo
+      count = await this.client.zcountAsync(prefix, '-inf', '+inf');
 
       if (count === 0) {
         await this.mongoLoad(prefixes[i]);
       }
 
       if (count >= limit) {
-        last = await this.client.zrangeAsync(prefixes[i], limit - 1, limit - 1, 'WITHSCORES');
+        last = await this.client.zrangeAsync(prefix, limit - 1, limit - 1, 'WITHSCORES');
         const newScore = last[1] - 1;
-        commands.push(['zremrangebyrank', prefixes[i], limit - 1, -1]);
-        commands.push(['zadd', prefixes[i], newScore, completion]);
+        commands.push(['zremrangebyrank', prefix, limit - 1, -1]);
+        commands.push(['zadd', prefix, newScore, completion]);
       } else {
-        commands.push(['zincrby', prefixes[i], -1, completion]);
+        commands.push(['zincrby', prefix, -1, completion]);
       }
     }
 
