@@ -23,9 +23,35 @@ const validateInputIsArray = (input, funcName) => {
 class Prefixy {
   constructor() {
     const opts = Prefixy.parseOpts();
+    const redisOptions = {
+      url: opts.redisUrl, 
+      prefix: opts.tenant + ":",
+      retry_strategy: function (options) {
+        if (options.error && options.error.code === 'ECONNREFUSED') {
+          // End reconnecting on a specific error and flush all commands with
+          // a individual error
+          return new Error('The server refused the connection');
+        }
+        if (options.total_retry_time > 1000 * 60 * 60) {
+          // End reconnecting after a specific timeout and flush all commands
+          // with a individual error
+          return new Error('Retry time exhausted');
+        }
+        if (options.attempt > 10) {
+          // End reconnecting with built in error
+          return undefined;
+        }
+        // reconnect after
+        return Math.min(options.attempt * 100, 3000);
+      },
+    }
+
+    console.log("prefixy object instantiated");
 
     this.redisUrl = opts.redisUrl;
     this.mongoUrl = opts.mongoUrl;
+    this.client = redis.createClient(redisOptions);
+    this.mongoClient = mongo.MongoClient;
     this.tenant = opts.tenant;
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
@@ -33,7 +59,6 @@ class Prefixy {
     this.prefixMaxChars = opts.prefixMaxChars;
     this.completionMaxChars = opts.completionMaxChars;
     this.bucketLimit = opts.bucketLimit;
-    this.mongoClient = mongo.MongoClient;
   }
 
   static defaultOpts() {
@@ -60,7 +85,7 @@ class Prefixy {
     return { ...this.defaultOpts(), ...opts };
   }
 
-  cliUpdateTenant(tenant) {
+  updateTenantConfig(tenant) {
     let opts = {};
 
     try {
@@ -73,31 +98,6 @@ class Prefixy {
   }
 
   async invoke(cb) {
-    const redisOptions = {
-      url: this.redisUrl, 
-      prefix: this.tenant + ":",
-      retry_strategy: function (options) {
-        if (options.error && options.error.code === 'ECONNREFUSED') {
-          // End reconnecting on a specific error and flush all commands with
-          // a individual error
-          return new Error('The server refused the connection');
-        }
-        if (options.total_retry_time > 1000 * 60 * 60) {
-          // End reconnecting after a specific timeout and flush all commands
-          // with a individual error
-          return new Error('Retry time exhausted');
-        }
-        if (options.attempt > 10) {
-          // End reconnecting with built in error
-          return undefined;
-        }
-        // reconnect after
-        return Math.min(options.attempt * 100, 3000);
-      },
-    }
-  
-    this.client = redis.createClient(redisOptions);
-
     return cb()
       .then((result) => {
         return result;
