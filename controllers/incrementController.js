@@ -1,4 +1,3 @@
-require('dotenv').config();
 const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const jwt = require("jsonwebtoken");
