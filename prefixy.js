@@ -100,7 +100,6 @@ class Prefixy {
 
     return cb()
       .then((result) => {
-        this.client.quit();
         return result;
       }).catch(err => { 
         console.log(err.message);
