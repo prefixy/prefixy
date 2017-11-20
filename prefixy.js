@@ -178,14 +178,14 @@ class Prefixy {
     const completions = await this.mongoFind(prefix);
 
     for (var i = 0; i < completions.length; i += 2) {
-      commands.push(['zadd', prefix, completions[i + 1], completions[i]]);
+      commands.push(['zadd', this.addTenant(prefix), completions[i + 1], completions[i]]);
     }
 
     return this.client.batch(commands).execAsync();
   }
 
   async mongoPersist(prefix) {
-    const completions = await this.client.zrangeAsync(prefix, 0, -1, 'WITHSCORES');
+    const completions = await this.client.zrangeAsync(this.addTenant(prefix), 0, -1, 'WITHSCORES');
 
     if (completions.length === 0) {
       this.mongoDelete(prefix);
@@ -264,6 +264,7 @@ class Prefixy {
 
     if (result.length === 0) {
       await this.mongoLoad(prefixQuery);
+      console.log(args);
       result = await this.client.zrangeAsync(...args);
     }
 
