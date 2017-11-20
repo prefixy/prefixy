@@ -154,22 +154,26 @@ class Prefixy {
     return promise;
   }
 
+  async connectMongo() {
+    return this.mongoClient.connect(this.mongoUrl);
+  }
+
   async mongoInsert(prefix, completions) {
     const args = [{prefix}, {$set: {completions}}, {upsert: true}];
-    const db = await this.mongoClient.connect(this.mongoUrl);
+    const db = await this.connectMongo();
     const col = db.collection(this.tenant);
     col.createIndex({prefix: "text"}, {background: true});
     col.findOneAndUpdate(...args, (err, r) => db.close());
   }
 
   async mongoDelete(prefix) {
-    const db = await this.mongoClient.connect(this.mongoUrl);
+    const db = await this.connectMongo();
     const col = db.collection(this.tenant);
     col.findOneAndDelete({prefix}, (err, r) => db.close());
   }
 
   async mongoFind(prefix) {
-    const db = await this.mongoClient.connect(this.mongoUrl);
+    const db = await this.connectMongo();
     const completions = await db.collection(this.tenant).find({prefix}).limit(1).toArray();
     db.close();
     if (completions[0]) {
