@@ -44,8 +44,6 @@ class Prefixy {
       },
     }
 
-    console.log("prefixy object instantiated");
-
     this.redisUrl = opts.redisUrl;
     this.mongoUrl = opts.mongoUrl;
     this.client = redis.createClient(redisOptions);
@@ -136,6 +134,10 @@ class Prefixy {
     return this.tenant + ":" + prefix;
   }
 
+  quitRedisClient() {
+    this.client.quit();
+  }
+
   importFile(filePath) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
@@ -202,7 +204,7 @@ class Prefixy {
 
   async insertCompletion(prefixes, completion) {
     for (let i = 0; i < prefixes.length; i++) {
-      let count = await this.client.zcountAsync(prefixes[i], '-inf', '+inf');
+      let count = await this.client.zcountAsync(this.addTenant(prefixes[i]), '-inf', '+inf');
 
       if (count === 0) {
         await this.mongoLoad(prefixes[i]);
@@ -264,7 +266,6 @@ class Prefixy {
 
     if (result.length === 0) {
       await this.mongoLoad(prefixQuery);
-      console.log(args);
       result = await this.client.zrangeAsync(...args);
     }
 

@@ -122,3 +122,4 @@ program
 
 
 program.parse(process.argv);
+Prefixy.quitRedisClient();
