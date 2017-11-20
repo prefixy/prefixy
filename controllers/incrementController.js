@@ -3,7 +3,8 @@ const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const jwt = require("jsonwebtoken");
 
 const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, process.env.SECRET).tenant;
+  const tenant = jwt.verify(token, process.env.SECRET).tenant;
+  Prefixy.updateTenant(tenant);
 };
 
 module.exports = async function(req, res, next) {

@@ -13,7 +13,8 @@ const formatCompletionsWithScores = completions => {
 };
 
 const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, process.env.SECRET).tenant;
+  const tenant = jwt.verify(token, process.env.SECRET).tenant;
+  Prefixy.updateTenant(tenant);
 };
 
 module.exports = {

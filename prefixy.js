@@ -93,6 +93,10 @@ class Prefixy {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(opts), "utf8");
   }
 
+  updateTenant(tenant) {
+    this.tenant = tenant;
+  }
+
   async invoke(cb) {
     return cb()
       .then((result) => {
