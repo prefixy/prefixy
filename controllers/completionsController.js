@@ -46,7 +46,7 @@ module.exports = {
     res.json(completions);
   },
 
-  post: async function(req, res, next) {
+  post: function(req, res, next) {
     try {
       resolveTenant(req.body.token);
     } catch(error) {
@@ -56,16 +56,12 @@ module.exports = {
 
     const completions = req.body.completions;
 
-    try {
-      await Prefixy.invoke(() => Prefixy.insertCompletions(completions));
-    } catch(error) {
-      return next(error);
-    }
+    Prefixy.invoke(() => Prefixy.insertCompletions(completions));
 
-    res.sendStatus(204);
+    res.sendStatus(202);
   },
 
-  delete: async function(req, res, next) {
+  delete: function(req, res, next) {
     try {
       resolveTenant(req.body.token);
     } catch(error) {
@@ -75,12 +71,8 @@ module.exports = {
 
     const completions = req.body.completions;
 
-    try {
-      await Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
-    } catch(error) {
-      return next(error);
-    }
+    Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
 
-    res.sendStatus(204);
+    res.sendStatus(202);
   },
 }
