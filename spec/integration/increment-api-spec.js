@@ -13,6 +13,11 @@ Prefixy.mongoUrl = "mongodb://localhost:27017/test";
 axios.defaults.baseURL = "http://localhost:3000";
 axios.defaults.headers.common['Accept'] = 'application/json';
 
+// Note:
+// Currently all api calls use the default redis and mongo URLs
+// As a result the test data here ends up in the production space
+// Would need to refactor the API to be able to instantiate Prefixy with test paths
+
 describe("putIncrementEndpoint", () => {
   const tenant = "test";
   const completion = "wally";
