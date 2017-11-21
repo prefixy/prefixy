@@ -83,10 +83,10 @@ class Prefixy {
     return cb()
       .then((result) => {
         return result;
-      }).catch(err => { 
+      }).catch(err => {
         console.log(err.message);
         err.message = "Internal Server Error";
-        throw err; 
+        throw err;
       });
   }
 
