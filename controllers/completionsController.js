@@ -1,4 +1,3 @@
-require('dotenv').config();
 const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
 const _ = require('lodash');
@@ -13,14 +12,15 @@ const formatCompletionsWithScores = completions => {
   ));
 };
 
-const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, process.env.SECRET).tenant;
+const findTenant = token => {
+  return jwt.verify(token, process.env.SECRET).tenant;
 };
 
 module.exports = {
   get: async function(req, res, next) {
+    let tenant;
     try {
-      resolveTenant(req.query.token);
+      tenant = findTenant(req.query.token);
     } catch(error) {
       error.status = 401;
       return next(error);
@@ -34,7 +34,7 @@ module.exports = {
     let completions;
 
     try {
-      completions = await Prefixy.invoke(() => Prefixy.search(prefix, opts));
+      completions = await Prefixy.invoke(() => Prefixy.search(prefix, tenant, opts));
     } catch(error) {
       return next(error);
     }
@@ -47,8 +47,9 @@ module.exports = {
   },
 
   post: function(req, res, next) {
+    let tenant;
     try {
-      resolveTenant(req.body.token);
+      tenant = findTenant(req.body.token);
     } catch(error) {
       error.status = 401;
       return next(error);
@@ -56,14 +57,15 @@ module.exports = {
 
     const completions = req.body.completions;
 
-    Prefixy.invoke(() => Prefixy.insertCompletions(completions));
+    Prefixy.invoke(() => Prefixy.insertCompletions(completions, tenant));
 
     res.sendStatus(202);
   },
 
   delete: function(req, res, next) {
+    let tenant;
     try {
-      resolveTenant(req.body.token);
+      tenant = findTenant(req.body.token);
     } catch(error) {
       error.status = 401;
       return next(error);
@@ -71,7 +73,7 @@ module.exports = {
 
     const completions = req.body.completions;
 
-    Prefixy.invoke(() => Prefixy.deleteCompletions(completions));
+    Prefixy.invoke(() => Prefixy.deleteCompletions(completions, tenant));
 
     res.sendStatus(202);
   },
