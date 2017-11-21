@@ -260,10 +260,6 @@ class Prefixy {
 
     let result = await this.client.zrangeAsync(...args);
 
-    if (!result) {
-      console.log(prefixyQuery, tenant, opts);
-    }
-
     if (result.length === 0) {
       await this.mongoLoad(prefix, tenant);
       result = await this.client.zrangeAsync(...args);

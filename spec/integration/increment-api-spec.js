@@ -14,7 +14,8 @@ axios.defaults.baseURL = "http://localhost:3000";
 axios.defaults.headers.common['Accept'] = 'application/json';
 
 describe("putIncrementEndpoint", () => {
-  const tenant = "int-test";
+  const tenant = "test";
+  const completion = "wally";
   const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJ0ZXN0IiwiaWF0IjoxNTExMjgzMTc3fQ.4YpkAIA8GlUc_EN_6L6bNs40Ec8jGaXpkbpUZZqB0mg";
 
   describe("validDataTest", () => {
@@ -23,12 +24,15 @@ describe("putIncrementEndpoint", () => {
       token: testToken 
     };
 
+    const params = { prefix: "w", token: testToken, scores: true }
+
     beforeEach(async () => {
-      await Prefixy.insertCompletions(["wally"], tenant);
+      await Prefixy.insertCompletions([completion], tenant);
     });
 
     afterEach(() => {
       Prefixy.client.flushdb();
+      Prefixy.deleteCompletions([completion], tenant);
     });
 
     it("returns a 204 No Content", async () => {
@@ -36,8 +40,14 @@ describe("putIncrementEndpoint", () => {
       expect(res.status).toBe(204);
     });
 
-    xit("increments the completion's score by 1", async () => {
+    it("increments the completion's score by 1", async () => {
+      const res1 = await axios.get("/completions", { params });
+      const originalScore = res1.data[0].score;
+      await axios.put("/increment", reqBody);
+      const res2 = await axios.get("/completions", { params });
+      const incrementedScore = res2.data[0].score;
 
+      expect(incrementedScore - originalScore).toBe(-1);
     });
   });
 
