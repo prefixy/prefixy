@@ -74,7 +74,7 @@ class Prefixy {
 
   async invoke(cb) {
     const redisOptions = {
-      url: this.redisUrl, 
+      url: this.redisUrl,
       prefix: this.tenant + ":",
       retry_strategy: function (options) {
         if (options.error && options.error.code === 'ECONNREFUSED') {
@@ -95,17 +95,17 @@ class Prefixy {
         return Math.min(options.attempt * 100, 3000);
       },
     }
-  
+
     this.client = redis.createClient(redisOptions);
 
     return cb()
       .then((result) => {
         this.client.quit();
         return result;
-      }).catch(err => { 
+      }).catch(err => {
         console.log(err.message);
         err.message = "Internal Server Error";
-        throw err; 
+        throw err;
       });
   }
 
