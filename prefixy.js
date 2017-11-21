@@ -128,7 +128,6 @@ class Prefixy {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
     const writer = new Writer(this, tenant);
-    console.log(tenant);
 
     const promise = new Promise((resolve, reject) => {
       json.pipe(parser).pipe(writer);
