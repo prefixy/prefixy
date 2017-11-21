@@ -1,14 +1,19 @@
-const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
+const path = require('path');
+const tenant = require(path.resolve(path.dirname(__dirname), 'tenant'));
 const jwt = require("jsonwebtoken");
 
 const resolveTenant = token => {
-  Prefixy.tenant = jwt.verify(token, process.env.SECRET).tenant;
+  tenant.setTenant(jwt.verify(token, process.env.SECRET).tenant);
 };
 
 module.exports = {
   authenticate: function(req, res, next) {
     try {
-      resolveTenant(req.query.token);
+      if (req.query.token) {
+        resolveTenant(req.query.token);
+      } else {
+        resolveTenant(req.body.token);
+      }
     } catch(error) {
       error.status = 401;
       return next(error);

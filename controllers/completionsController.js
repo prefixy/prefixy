@@ -1,5 +1,6 @@
 const path = require('path');
 const Prefixy = require(path.resolve(path.dirname(__dirname), 'prefixy'));
+const tenant = require(path.resolve(path.dirname(__dirname), 'tenant'));
 const _ = require('lodash');
 
 const formatCompletionsWithScores = completions => {
@@ -21,7 +22,7 @@ module.exports = {
     let completions;
 
     try {
-      completions = await Prefixy.invoke(() => Prefixy.search(prefix, tenant, opts));
+      completions = await Prefixy.invoke(() => Prefixy.search(prefix, tenant.getTenant(), opts));
     } catch(error) {
       return next(error);
     }
@@ -36,7 +37,7 @@ module.exports = {
   post: function(req, res, next) {
     const completions = req.body.completions;
 
-    Prefixy.invoke(() => Prefixy.insertCompletions(completions, tenant));
+    Prefixy.invoke(() => Prefixy.insertCompletions(completions, tenant.getTenant()));
 
     res.sendStatus(202);
   },
@@ -44,7 +45,7 @@ module.exports = {
   delete: function(req, res, next) {
     const completions = req.body.completions;
 
-    Prefixy.invoke(() => Prefixy.deleteCompletions(completions, tenant));
+    Prefixy.invoke(() => Prefixy.deleteCompletions(completions, tenant.getTenant()));
 
     res.sendStatus(202);
   },
