@@ -32,6 +32,12 @@ const loadTenant = () => {
 
 const tenant = loadTenant();
 
+if (tenant === "test") {
+  Prefixy.setTestClients();
+} else {
+  Prefixy.setClients();
+}
+
 program
   .version('0.0.1')
   .description(`Prefixy is a prefix hash trie that utilizes

@@ -5,5 +5,6 @@ module.exports = {
   },
   getTenant: () => {
     return this.tenant;
-  }
+  },
+  lastRequestWasTest: false,
 };

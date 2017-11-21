@@ -22,31 +22,11 @@ const validateInputIsArray = (input, funcName) => {
 class Prefixy {
   constructor() {
     const opts = Prefixy.parseOpts();
-    const redisOptions = {
-      url: opts.redisUrl, 
-      retry_strategy: function (options) {
-        if (options.error && options.error.code === 'ECONNREFUSED') {
-          // End reconnecting on a specific error and flush all commands with
-          // a individual error
-          return new Error('The server refused the connection');
-        }
-        if (options.total_retry_time > 1000 * 60 * 60) {
-          // End reconnecting after a specific timeout and flush all commands
-          // with a individual error
-          return new Error('Retry time exhausted');
-        }
-        if (options.attempt > 10) {
-          // End reconnecting with built in error
-          return undefined;
-        }
-        // reconnect after
-        return Math.min(options.attempt * 100, 3000);
-      },
-    }
-
+  
     this.redisUrl = opts.redisUrl;
     this.mongoUrl = opts.mongoUrl;
-    this.client = redis.createClient(redisOptions);
+    this.client; // for redis client
+    this.test; // whether we are using test clients
     this.mongoClient = mongo.MongoClient;
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
@@ -90,6 +70,49 @@ class Prefixy {
       });
   }
 
+  setClients() {
+    // don't create new client if not testing and client already exists
+    if (!this.test && this.client) {
+      return;
+    }
+
+    const redisOptions = {
+      url: this.redisUrl,
+      retry_strategy: function (options) {
+        if (options.error && options.error.code === 'ECONNREFUSED') {
+          // End reconnecting on a specific error and flush all commands with
+          // a individual error
+          return new Error('The server refused the connection');
+        }
+        if (options.total_retry_time > 1000 * 60 * 60) {
+          // End reconnecting after a specific timeout and flush all commands
+          // with a individual error
+          return new Error('Retry time exhausted');
+        }
+        if (options.attempt > 10) {
+          // End reconnecting with built in error
+          return undefined;
+        }
+        // reconnect after
+        return Math.min(options.attempt * 100, 3000);
+      },
+    }
+
+    this.test = false;
+    this.mongoUrl = this.mongoUrl + "prefixy";
+    this.client = redis.createClient(redisOptions);
+  }
+
+  setTestClients() {
+    this.test = true;
+    this.mongoUrl = this.mongoUrl + "test";
+    this.client = redis.createClient({ db: 1 });
+  }
+
+  quitRedisClient() {
+    this.client.quit();
+  }
+
   normalizePrefix(string) {
     string = string.slice(0, this.prefixMaxChars);
     string = string.toLowerCase();
@@ -118,10 +141,6 @@ class Prefixy {
 
   addTenant(prefix, tenant) {
     return tenant + ":" + prefix;
-  }
-
-  quitRedisClient() {
-    this.client.quit();
   }
 
   importFile(filePath, tenant) {
