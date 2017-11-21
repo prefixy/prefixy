@@ -48,7 +48,6 @@ class Prefixy {
     this.mongoUrl = opts.mongoUrl;
     this.client = redis.createClient(redisOptions);
     this.mongoClient = mongo.MongoClient;
-    this.tenant = opts.tenant;
     this.maxMemory = opts.maxMemory;
     this.suggestionCount = opts.suggestionCount;
     this.prefixMinChars = opts.prefixMinChars;
@@ -61,7 +60,6 @@ class Prefixy {
     return {
       redisUrl: process.env.REDIS_URL,
       mongoUrl: process.env.MONGODB_URI,
-      tenant: "tenant",
       maxMemory: 500,
       suggestionCount: 5,
       prefixMinChars: 1,
@@ -91,10 +89,6 @@ class Prefixy {
     opts = { ...opts, tenant};
 
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(opts), "utf8");
-  }
-
-  updateTenant(tenant) {
-    this.tenant = tenant;
   }
 
   async invoke(cb) {
@@ -134,8 +128,8 @@ class Prefixy {
     return prefixes;
   }
 
-  addTenant(prefix) {
-    return this.tenant + ":" + prefix;
+  addTenant(prefix, tenant) {
+    return tenant + ":" + prefix;
   }
 
   quitRedisClient() {
@@ -158,23 +152,23 @@ class Prefixy {
     return this.mongoClient.connect(this.mongoUrl);
   }
 
-  async mongoInsert(prefix, completions) {
+  async mongoInsert(prefix, tenant, completions) {
     const args = [{prefix}, {$set: {completions}}, {upsert: true}];
     const db = await this.connectMongo();
-    const col = db.collection(this.tenant);
+    const col = db.collection(tenant);
     col.createIndex({prefix: "text"}, {background: true});
     col.findOneAndUpdate(...args, (err, r) => db.close());
   }
 
-  async mongoDelete(prefix) {
+  async mongoDelete(prefix, tenant) {
     const db = await this.connectMongo();
-    const col = db.collection(this.tenant);
+    const col = db.collection(tenant);
     col.findOneAndDelete({prefix}, (err, r) => db.close());
   }
 
-  async mongoFind(prefix) {
+  async mongoFind(prefix, tenant) {
     const db = await this.connectMongo();
-    const completions = await db.collection(this.tenant).find({prefix}).limit(1).toArray();
+    const completions = await db.collection(tenant).find({prefix}).limit(1).toArray();
     db.close();
     if (completions[0]) {
       return completions[0].completions;
@@ -183,48 +177,51 @@ class Prefixy {
     }
   }
 
-  async mongoLoad(prefix) {
+  async mongoLoad(prefix, tenant) {
     const commands = [];
-    const completions = await this.mongoFind(prefix);
+    const completions = await this.mongoFind(prefix, tenant);
+    const prefixWithTenant = this.addTenant(prefix, tenant);
 
     for (var i = 0; i < completions.length; i += 2) {
-      commands.push(['zadd', this.addTenant(prefix), completions[i + 1], completions[i]]);
+      commands.push(['zadd', prefixWithTenant, completions[i + 1], completions[i]]);
     }
 
     return this.client.batch(commands).execAsync();
   }
 
-  async mongoPersist(prefix) {
-    const completions = await this.client.zrangeAsync(this.addTenant(prefix), 0, -1, 'WITHSCORES');
+  async mongoPersist(prefix, tenant) {
+    const prefixWithTenant = this.addTenant(prefix, tenant);
+    const completions = await this.client.zrangeAsync(prefixWithTenant, 0, -1, 'WITHSCORES');
 
     if (completions.length === 0) {
-      this.mongoDelete(prefix);
+      this.mongoDelete(prefix, tenant);
     } else {
-      this.mongoInsert(prefix, completions);
+      this.mongoInsert(prefix, tenant, completions);
     }
   }
 
-  async persistPrefixes(prefixes) {
+  async persistPrefixes(prefixes, tenant) {
     for (var i = 0; i < prefixes.length; i++) {
-      await this.mongoPersist(prefixes[i]);
+      await this.mongoPersist(prefixes[i], tenant);
     }
   }
 
-  async insertCompletion(prefixes, completion) {
+  async insertCompletion(prefixes, tenant, completion) {
     for (let i = 0; i < prefixes.length; i++) {
-      let count = await this.client.zcountAsync(this.addTenant(prefixes[i]), '-inf', '+inf');
+      let prefixWithTenant = this.addTenant(prefixes[i], tenant);
+      let count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
 
       if (count === 0) {
-        await this.mongoLoad(prefixes[i]);
+        await this.mongoLoad(prefixes[i], tenant);
       }
 
       if (count < this.bucketLimit) {
-        await this.client.zaddAsync(this.addTenant(prefixes[i]), 'NX', 0, completion);
+        await this.client.zaddAsync(prefixWithTenant, 'NX', 0, completion);
       }
     }
   }
 
-  async insertCompletions(array) {
+  async insertCompletions(array, tenant) {
     validateInputIsArray(array, "insertCompletions");
 
     let allPrefixes = [];
@@ -235,13 +232,13 @@ class Prefixy {
       const prefixes = this.extractPrefixes(completion);
 
       allPrefixes = [...allPrefixes, ...prefixes];
-      await this.insertCompletion(prefixes, completion);
+      await this.insertCompletion(prefixes, tenant, completion);
     }
 
-    return this.persistPrefixes(allPrefixes);
+    return this.persistPrefixes(allPrefixes, tenant);
   }
 
-  async deleteCompletions(completions) {
+  async deleteCompletions(completions, tenant) {
     validateInputIsArray(completions, "deleteCompletions");
 
     let allPrefixes = [];
@@ -251,64 +248,66 @@ class Prefixy {
       const prefixes = this.extractPrefixes(completion);
       allPrefixes = [...allPrefixes, ...prefixes];
 
-      prefixes.forEach(prefix =>
-        commands.push(["zrem", this.addTenant(prefix), completion])
-      );
+      prefixes.forEach(prefix => {
+        const prefixWithTenant = this.addTenant(prefix, tenant);
+        commands.push(["zrem", prefixWithTenant, completion]);
+      }, this);
     });
 
     return this.client.batch(commands).execAsync().then(async () => {
-      await this.persistPrefixes(allPrefixes);
+      await this.persistPrefixes(allPrefixes, tenant);
       return "persist success";
     });
   }
 
-  async search(prefixQuery, opts={}) {
+  async search(prefixQuery, tenant, opts={}) {
     const defaultOpts = { limit: this.suggestionCount, withScores: false };
     opts = { ...defaultOpts, ...opts }
     const limit = opts.limit - 1;
+    const prefix = this.normalizePrefix(prefixQuery);
+    const prefixWithTenant = this.addTenant(prefix, tenant);
 
-    let args = [this.addTenant(this.normalizePrefix(prefixQuery)), 0, limit];
+    let args = [prefixWithTenant, 0, limit];
     if (opts.withScores) args = args.concat('WITHSCORES');
 
     let result = await this.client.zrangeAsync(...args);
 
     if (result.length === 0) {
-      await this.mongoLoad(prefixQuery);
+      await this.mongoLoad(prefix, tenant);
       result = await this.client.zrangeAsync(...args);
     }
 
     return result;
   }
 
-  async increment(completion) {
+  async increment(completion, tenant) {
     completion = this.normalizeCompletion(completion);
     const prefixes = this.extractPrefixes(completion);
     const commands = [];
     const limit = this.bucketLimit;
     let count;
     let last;
-    let prefix;
 
     for (var i = 0; i < prefixes.length; i++) {
-      prefix = this.addTenant(prefixes[i]); // for redis, not mongo
-      count = await this.client.zcountAsync(prefix, '-inf', '+inf');
+      let prefixWithTenant = this.addTenant(prefixes[i], tenant);
+      count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
 
       if (count === 0) {
-        await this.mongoLoad(prefixes[i]);
+        await this.mongoLoad(prefixes[i], tenant);
       }
 
       if (count >= limit) {
-        last = await this.client.zrangeAsync(prefix, limit - 1, limit - 1, 'WITHSCORES');
+        last = await this.client.zrangeAsync(prefixWithTenant, limit - 1, limit - 1, 'WITHSCORES');
         const newScore = last[1] - 1;
-        commands.push(['zremrangebyrank', prefix, limit - 1, -1]);
-        commands.push(['zadd', prefix, newScore, completion]);
+        commands.push(['zremrangebyrank', prefixWithTenant, limit - 1, -1]);
+        commands.push(['zadd', prefixWithTenant, newScore, completion]);
       } else {
-        commands.push(['zincrby', prefix, -1, completion]);
+        commands.push(['zincrby', prefixWithTenant, -1, completion]);
       }
     }
 
     return this.client.batch(commands).execAsync().then(async () => {
-      await this.persistPrefixes(prefixes);
+      await this.persistPrefixes(prefixes, tenant);
       return "persist success";
     });
   }
