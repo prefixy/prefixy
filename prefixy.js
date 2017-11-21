@@ -260,6 +260,10 @@ class Prefixy {
 
     let result = await this.client.zrangeAsync(...args);
 
+    if (!result) {
+      console.log(prefixyQuery, tenant, opts);
+    }
+
     if (result.length === 0) {
       await this.mongoLoad(prefix, tenant);
       result = await this.client.zrangeAsync(...args);
@@ -300,5 +304,9 @@ class Prefixy {
     });
   }
 }
+
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at:', p, 'reason:', reason);
+});
 
 module.exports = new Prefixy();

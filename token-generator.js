@@ -9,3 +9,7 @@ console.log("token:", token);
 
 const decoded = jwt.verify(token, secret);
 console.log("decoded:", decoded);
+
+const testToken = jwt.sign({tenant: "test"}, secret);
+console.log("test token:", testToken);
+console.log(jwt.verify(testToken, secret));

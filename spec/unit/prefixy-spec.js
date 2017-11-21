@@ -21,6 +21,7 @@ describe("Prefixy", () => {
   describe("importFile", () => {
     let filePath;
     let fileCreated = false;
+    const tenant = "unit-test";
 
     const saveFile = data => {
       fs.writeFileSync(filePath, data, "utf8");
@@ -43,7 +44,7 @@ describe("Prefixy", () => {
       const data = JSON.stringify(["tiff", "wal", "jay"]);
       saveFile(data);
 
-      Prefixy.importFile(filePath);
+      Prefixy.importFile(filePath, tenant);
 
       expect(
         Prefixy.insertCompletions
@@ -51,7 +52,7 @@ describe("Prefixy", () => {
     });
 
     xit("does not call insertCompletions when the path is invalid", () => {
-      Prefixy.importFile("testtttttttttt-data.json");
+      Prefixy.importFile("testtttttttttt-data.json", tenant);
 
       expect(
         Prefixy.insertCompletions
@@ -61,7 +62,7 @@ describe("Prefixy", () => {
     xit("does not call insertCompletions when the JSON is invalid", () => {
       saveFile("['pikachu' 'bulbasaur' 'gengar']");
 
-      Prefixy.importFile(filePath);
+      Prefixy.importFile(filePath, tenant);
 
       expect(
         Prefixy.insertCompletions
@@ -70,40 +71,60 @@ describe("Prefixy", () => {
   });
 
   describe("search", () => {
+    const tenant = "unit-test";
+
     beforeEach(() => {
-      spyOn(Prefixy.client, "zrangeAsync");
+      spyOn(Prefixy.client, "zrangeAsync").and.callThrough();
+      spyOn(Prefixy, "mongoLoad");
+      spyOn(Prefixy, "normalizePrefix").and.callThrough();
+      spyOn(Prefixy, "addTenant").and.callThrough();
     });
 
     it("calls zrangeAsync", () => {
-      Prefixy.search("wo");
+      Prefixy.search("wo", tenant);
 
       expect(
         Prefixy.client.zrangeAsync
       ).toHaveBeenCalled();
     });
 
+    it("calls normalizePrefix", () => {
+      const prefix = "wo";
+      Prefixy.search(prefix, tenant);
+
+      expect(
+        Prefixy.normalizePrefix
+      ).toHaveBeenCalledWith("wo");
+    });
+
+    it("calls addTenant with normalized prefix", () => {
+      const prefix = "Char   ManD  er";
+      const normalizedPrefix = Prefixy.normalizePrefix(prefix);
+      Prefixy.search(prefix, tenant);
+
+      expect(
+        Prefixy.addTenant
+      ).toHaveBeenCalledWith(normalizedPrefix, tenant);
+    });
+
     it("calls zrangeAsync with correct arguments", () => {
-      Prefixy.search("wo");
+      const prefix = "wo";
+      const prefixWithTenant = Prefixy.addTenant(Prefixy.normalizePrefix(prefix), tenant);
+      Prefixy.search(prefix, tenant);
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("wo", 0, Prefixy.suggestionCount - 1);
+      ).toHaveBeenCalledWith(prefixWithTenant, 0, Prefixy.suggestionCount - 1);
     });
 
     it("calls zrangeAsync with the options provided to search", () => {
-      Prefixy.search("wo", { limit: 5, withScores: true });
+      const prefix = "wo";
+      const prefixWithTenant = Prefixy.addTenant(Prefixy.normalizePrefix(prefix), tenant);
+      Prefixy.search(prefix, tenant, { limit: 5, withScores: true });
 
       expect(
         Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("wo", 0, 4, 'WITHSCORES');
-    });
-
-    it("calls zrangeAsync with downcased prefixQuery", () => {
-      Prefixy.search("Mew Two");
-
-      expect(
-        Prefixy.client.zrangeAsync
-      ).toHaveBeenCalledWith("mew two", 0, Prefixy.suggestionCount - 1);
+      ).toHaveBeenCalledWith(prefixWithTenant, 0, 4, 'WITHSCORES');
     });
   });
 });

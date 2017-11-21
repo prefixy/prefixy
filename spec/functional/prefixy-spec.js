@@ -7,10 +7,11 @@ const fs = require("fs");
 const path = require("path");
 const Prefixy = require(path.resolve(path.dirname(path.dirname(__dirname)), "prefixy"));
 
-Prefixy.client = redis.createClient({ db: 1, prefix: "test:" });
+Prefixy.client = redis.createClient({ db: 1 });
 Prefixy.mongoUrl = "mongodb://localhost:27017/test";
 
 describe("Prefixy works with redis", () => {
+  const tenant = "func-test";
 
   afterEach(() => {
     Prefixy.client.flushdb();
@@ -19,27 +20,27 @@ describe("Prefixy works with redis", () => {
   describe("inserting completions", () => {
     it("adds completion to all of its prefixes", async () => {
       const completions = ["charizard"];
-      await Prefixy.insertCompletions(completions);
-      const prefix1 = await Prefixy.search("c");
-      const prefix2 = await Prefixy.search("char");
-      const prefix3 = await Prefixy.search("charizard");
+      await Prefixy.insertCompletions(completions, tenant);
+      const prefix1 = await Prefixy.search("c", tenant);
+      const prefix2 = await Prefixy.search("char", tenant);
+      const prefix3 = await Prefixy.search("charizard", tenant);
 
       expect(prefix1).toContain("charizard");
       expect(prefix2).toContain("charizard");
       expect(prefix3).toContain("charizard");
 
-      await Prefixy.deleteCompletions(completions);
+      await Prefixy.deleteCompletions(completions, tenant);
     });
 
     it("can add a group of completions", async () => {
       const completions = ["parasect", "jigglypuff", "paras"];
-      await Prefixy.insertCompletions(completions);
-      const prefixP      = await Prefixy.search("p");
-      const prefixPa     = await Prefixy.search("pa");
-      const prefixJ      = await Prefixy.search("j");
-      const prefixJiggly = await Prefixy.search("jiggly");
-      const prefixParas  = await Prefixy.search("paras");
-      const prefixParase = await Prefixy.search("parase");
+      await Prefixy.insertCompletions(completions, tenant);
+      const prefixP      = await Prefixy.search("p", tenant);
+      const prefixPa     = await Prefixy.search("pa", tenant);
+      const prefixJ      = await Prefixy.search("j", tenant);
+      const prefixJiggly = await Prefixy.search("jiggly", tenant);
+      const prefixParas  = await Prefixy.search("paras", tenant);
+      const prefixParase = await Prefixy.search("parase", tenant);
 
       expect(prefixP).toEqual(["paras", "parasect"]);
       expect(prefixPa).toEqual(["paras", "parasect"]);
@@ -48,32 +49,34 @@ describe("Prefixy works with redis", () => {
       expect(prefixParas).toEqual(["paras", "parasect"]);
       expect(prefixParase).toEqual(["parasect"]);
 
-      await Prefixy.deleteCompletions(completions);
+      await Prefixy.deleteCompletions(completions, tenant);
     });
 
     it("can add strings containing special characters", async () => {
-      await Prefixy.insertCompletions(["!@#$!@!#  !#@!/\\"]);
-      const prefix1 = await Prefixy.search("!@");
-      const prefix2 = await Prefixy.search("!@#$!@!#  ");
-      const prefix3 = await Prefixy.search("!@#$!@!#  !");
-      const prefix4 = await Prefixy.search("!@#$!@!#  !#@!/\\");
+      const completion = "!@#$!@!#  !#@!/\\";
+      const normalizedCompletion = Prefixy.normalizeCompletion(completion);
+      await Prefixy.insertCompletions([completion], tenant);
+      const prefix1 = await Prefixy.search("!@", tenant);
+      const prefix2 = await Prefixy.search("!@#$!@!#  ", tenant);
+      const prefix3 = await Prefixy.search("!@#$!@!#  !", tenant);
+      const prefix4 = await Prefixy.search("!@#$!@!#  !#@!/\\", tenant);
 
-      expect(prefix1).toEqual(["!@#$!@!#  !#@!/\\"]);
-      expect(prefix2).toEqual(["!@#$!@!#  !#@!/\\"]);
-      expect(prefix3).toEqual(["!@#$!@!#  !#@!/\\"]);
-      expect(prefix4).toEqual(["!@#$!@!#  !#@!/\\"]);
+      expect(prefix1).toEqual([normalizedCompletion]);
+      expect(prefix2).toEqual([normalizedCompletion]);
+      expect(prefix3).toEqual([normalizedCompletion]);
+      expect(prefix4).toEqual([normalizedCompletion]);
     });
   });
 
   describe("deleteCompletions", () => {
     it("removes completions from each of their prefixes", async () => {
-      await Prefixy.insertCompletions(["geodude", "ghastly", "graveler"]);
-      await Prefixy.deleteCompletions(["geodude", "graveler"]);
-      const results = await Prefixy.search("g");
+      await Prefixy.insertCompletions(["geodude", "ghastly", "graveler"], tenant);
+      await Prefixy.deleteCompletions(["geodude", "graveler"], tenant);
+      const results = await Prefixy.search("g", tenant);
 
       expect(results).toEqual(["ghastly"]);
 
-      Prefixy.deleteCompletions(["ghastly"]);
+      Prefixy.deleteCompletions(["ghastly"], tenant);
     });
   });
 });

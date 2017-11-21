@@ -7,19 +7,24 @@ const bluebird = require("bluebird");
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 
-Prefixy.client = redis.createClient({ db: 1, prefix: "test:" });
+Prefixy.client = redis.createClient({ db: 1 });
+Prefixy.mongoUrl = "mongodb://localhost:27017/test";
 
 axios.defaults.baseURL = "http://localhost:3000";
 axios.defaults.headers.common['Accept'] = 'application/json';
 
 describe("putIncrementEndpoint", () => {
+  const tenant = "int-test";
+  const testToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0ZW5hbnQiOiJ0ZXN0IiwiaWF0IjoxNTExMjgzMTc3fQ.4YpkAIA8GlUc_EN_6L6bNs40Ec8jGaXpkbpUZZqB0mg";
+
   describe("validDataTest", () => {
     const reqBody = {
-      completion: "wally"
+      completion: "wally",
+      token: testToken 
     };
 
     beforeEach(async () => {
-      await Prefixy.insertCompletions(["wally"]);
+      await Prefixy.insertCompletions(["wally"], tenant);
     });
 
     afterEach(() => {
