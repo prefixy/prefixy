@@ -124,10 +124,11 @@ class Prefixy {
     this.client.quit();
   }
 
-  importFile(filePath) {
+  importFile(filePath, tenant) {
     const json = fs.createReadStream(path.resolve(process.cwd(), filePath), "utf8");
     const parser = JSONStream.parse("*");
-    const writer = new Writer(this);
+    const writer = new Writer(this, tenant);
+    console.log(tenant);
 
     const promise = new Promise((resolve, reject) => {
       json.pipe(parser).pipe(writer);

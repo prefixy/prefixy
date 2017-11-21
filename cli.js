@@ -45,23 +45,25 @@ program
   .command('token <token>')
   .action(token => {
     try {
-      const tenant = jwt.verify(token, process.env.SECRET).tenant;
-      updateTenant(tenant);
+      const newTenant = jwt.verify(token, process.env.SECRET).tenant;
+      updateTenant(newTenant);
     } catch(e) {
       console.log("Invalid token -- tenant not updated");
       console.log(e);
     }
+    Prefixy.quitRedisClient();
   });
 
 program
-  .command('tenant <tenant>')
-  .action(tenant => {
+  .command('tenant <newTenant>')
+  .action(newTenant => {
     try {
-      updateTenant(tenant);
+      updateTenant(newTenant);
     } catch(e) {
       console.log("Invalid tenant -- not updated");
       console.log(e);
     }
+    Prefixy.quitRedisClient();  
   });
 
 program
@@ -70,11 +72,11 @@ program
     let result;
 
     try {
-      result = await Prefixy.invoke(() => Prefixy.importFile(path));
-      Prefixy.quitRedisClient();
+      result = await Prefixy.invoke(() => Prefixy.importFile(path, tenant));
     } catch(e) {
       console.log(e);
     }
+    Prefixy.quitRedisClient();
 
     console.log("\n", result);
   });
@@ -84,10 +86,10 @@ program
   .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.insertCompletions([completion], tenant));
-      Prefixy.quitRedisClient();
     } catch(e) {
       console.log(e);
     }
+    Prefixy.quitRedisClient();
   });
 
 program
@@ -95,10 +97,10 @@ program
   .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.increment(completion, tenant));
-      Prefixy.quitRedisClient();
     } catch(e) {
       console.log(e);
     }
+    Prefixy.quitRedisClient();
   });
 
 program
@@ -113,11 +115,11 @@ program
 
     try {
       result = await Prefixy.invoke(() => Prefixy.search(...args));
-      Prefixy.quitRedisClient();
     } catch(e) {
       console.log(e);
     }
 
+    Prefixy.quitRedisClient();
     console.log(result);
   });
 
@@ -126,10 +128,10 @@ program
   .action(async completion => {
     try {
       await Prefixy.invoke(() => Prefixy.deleteCompletions([completion], tenant));
-      Prefixy.quitRedisClient();
     } catch(e) {
       console.log(e);
     }
+    Prefixy.quitRedisClient();
   });
 
 program.parse(process.argv);
