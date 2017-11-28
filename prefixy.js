@@ -45,7 +45,7 @@ class Prefixy {
       prefixMinChars: 1,
       prefixMaxChars: 15,
       completionMaxChars: 50,
-      bucketLimit: 50
+      bucketLimit: 4
     };
   }
 
@@ -213,14 +213,21 @@ class Prefixy {
     }
   }
 
+  async getCompletionsCount(prefix, tenant, prefixWithTenant) {
+    let count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
+
+    if (count === 0) {
+      await this.mongoLoad(prefix, tenant);
+      count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
+    }
+
+    return count;
+  }
+
   async insertCompletion(prefixes, tenant, completion) {
     for (let i = 0; i < prefixes.length; i++) {
       let prefixWithTenant = this.addTenant(prefixes[i], tenant);
-      let count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
-
-      if (count === 0) {
-        await this.mongoLoad(prefixes[i], tenant);
-      }
+      const count = await this.getCompletionsCount(prefixes[i], tenant, prefixWithTenant);
 
       if (count < this.bucketLimit) {
         await this.client.zaddAsync(prefixWithTenant, 'NX', 0, completion);
@@ -292,21 +299,18 @@ class Prefixy {
     const prefixes = this.extractPrefixes(completion);
     const commands = [];
     const limit = this.bucketLimit;
-    let count;
-    let last;
 
-    for (var i = 0; i < prefixes.length; i++) {
+    for (let i = 0; i < prefixes.length; i++) {
       let prefixWithTenant = this.addTenant(prefixes[i], tenant);
-      count = await this.client.zcountAsync(prefixWithTenant, '-inf', '+inf');
-
-      if (count === 0) {
-        await this.mongoLoad(prefixes[i], tenant);
-      }
-
-      if (count >= limit) {
-        last = await this.client.zrangeAsync(prefixWithTenant, limit - 1, limit - 1, 'WITHSCORES');
-        const newScore = last[1] - 1;
-        commands.push(['zremrangebyrank', prefixWithTenant, limit - 1, -1]);
+      let count = await this.getCompletionsCount(prefixes[i], tenant, prefixWithTenant);
+      const includesCompletion = await this.client.zscoreAsync(prefixWithTenant, completion);
+      
+      if (count >= limit && !includesCompletion) {
+        // Replace lowest score completion with the current completion, using the lowest score incremented by 1
+        const lastPosition = limit - 1;
+        const lastElement = await this.client.zrangeAsync(prefixWithTenant, lastPosition, lastPosition, 'WITHSCORES');
+        const newScore = lastElement[1] - 1;
+        commands.push(['zremrangebyrank', prefixWithTenant, lastPosition, -1]);
         commands.push(['zadd', prefixWithTenant, newScore, completion]);
       } else {
         commands.push(['zincrby', prefixWithTenant, -1, completion]);
