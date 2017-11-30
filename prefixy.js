@@ -305,7 +305,7 @@ class Prefixy {
       let count = await this.getCompletionsCount(prefixes[i], tenant, prefixWithTenant);
       const includesCompletion = await this.client.zscoreAsync(prefixWithTenant, completion);
       
-      if (count >= limit && !includesCompletion) {
+      if (count >= limit && includesCompletion < 0) {
         // Replace lowest score completion with the current completion, using the lowest score incremented by 1
         const lastPosition = limit - 1;
         const lastElement = await this.client.zrangeAsync(prefixWithTenant, lastPosition, lastPosition, 'WITHSCORES');
