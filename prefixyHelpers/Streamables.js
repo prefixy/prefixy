@@ -2,9 +2,10 @@ const { Writable } = require("stream");
 const path = require("path");
 
 class Writer extends Writable {
-  constructor(Prefixy, options={ objectMode: true }) {
+  constructor(Prefixy, tenant, options={ objectMode: true }) {
     super(options);
     this.Prefixy = Prefixy;
+    this.tenant = tenant;
   }
 
   static logMemory(task) {
@@ -19,7 +20,7 @@ class Writer extends Writable {
     console.log("Writing to redis, please wait...");
     Writer.logMemory("This import");
 
-    this.Prefixy.insertCompletions([item])
+    this.Prefixy.insertCompletions([item], this.tenant)
       .then(() => callback())
       .catch(callback);
   }
