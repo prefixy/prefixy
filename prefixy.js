@@ -45,7 +45,7 @@ class Prefixy {
       prefixMinChars: 1,
       prefixMaxChars: 15,
       completionMaxChars: 50,
-      bucketLimit: 4
+      bucketLimit: 50
     };
   }
 
