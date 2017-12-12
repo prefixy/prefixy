@@ -5,4 +5,4 @@ Prefixy is a hosted prefix search engine that powers autocomplete suggestions. S
 
 Documentation is in the [docs directory](https://github.com/jayshenk/prefixy/tree/master/docs). Additional documentation coming soon!
 
-Also see the [prefixy-service](https://github.com/jayshenk/prefixy-service) repo, which is responsible for API token generation, hosting the client javascript, and the user interface for [prefixy.io](http://www.prefixy.io/).
+Also see the [prefixy-service](https://github.com/jayshenk/prefixy-service) repo, which is responsible for API token generation, hosting the client javascript, and the user interface for [prefixy.io](https://www.prefixy.io/).
