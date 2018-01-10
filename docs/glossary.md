@@ -8,7 +8,7 @@
  - refers to all possible ways that a prefix can be completed
 
 ##### suggestions
- - top completions which shoulld be returned to the user
+ - top completions which should be returned to the user
 
 ##### prefix query
  - what user inputs as they form their search query
