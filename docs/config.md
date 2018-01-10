@@ -37,7 +37,7 @@ Did you know you can set custom configuration options
 for Prefixy? All you have to do is create a file named
 `prefixy-config.json` in the `Prefixy` project directory.
 
-### Example Prefixy coniguration
+### Example Prefixy configuration
 
 In `prefixy-config.json`:
 
