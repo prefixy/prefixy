@@ -20,7 +20,7 @@ Add these two lines in a file named `redis.conf`:
 ```
 
 Now, in order for the configuration to take effect,
-you should start/restart the sever using this command:
+you should start/restart the server using this command:
 
 `redis-server <path to redis.conf file>`
 
